@@ -2,11 +2,8 @@ import express from "express";
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { z } from "zod";
-import * as dotenv from 'dotenv';
+import { config, logger } from './env.js';
 import * as twitterClient from './twitter-client.js';
-
-// Load environment variables
-dotenv.config();
 
 // Create a new MCP server
 const server = new McpServer({
@@ -596,7 +593,7 @@ if (twitterFeatures.grokAccess) {
 
 // Create an Express app for HTTP transport
 const app = express();
-const PORT = parseInt(process.env.PORT || '3000', 10);
+const PORT = config.PORT;
 
 // Store active transports
 const activeTransports = new Map<string, SSEServerTransport>();
@@ -615,16 +612,16 @@ app.get("/sse", async (req, res) => {
   // Set up cleanup when client disconnects
   req.on("close", () => {
     activeTransports.delete(sessionId);
-    console.error(`Client disconnected: ${sessionId}`);
+    logger.info(`Client disconnected: ${sessionId}`);
   });
 
   res.write(`data: ${JSON.stringify({ sessionId })}\n\n`);
 
   try {
     await server.connect(transport);
-    console.error(`Client connected: ${sessionId}`);
+    logger.info(`Client connected: ${sessionId}`);
   } catch (error) {
-    console.error(`Error connecting client ${sessionId}:`, error);
+    logger.error(`Error connecting client ${sessionId}:`, error);
   }
 });
 
@@ -642,7 +639,7 @@ app.post("/messages", express.json(), async (req, res): Promise<void> => {
   try {
     await transport.handlePostMessage(req, res);
   } catch (error) {
-    console.error(`Error handling message for session ${sessionId}:`, error);
+    logger.error(`Error handling message for session ${sessionId}:`, error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -652,19 +649,19 @@ function startServer(port: number, maxRetries = 3, retryCount = 0) {
   const server = app.listen(port)
     .on('error', (err: any) => {
       if (err.code === 'EADDRINUSE' && retryCount < maxRetries) {
-        console.error(`Port ${port} is already in use, trying port ${port + 1}...`);
+        logger.warn(`Port ${port} is already in use, trying port ${port + 1}...`);
         server.close();
         startServer(port + 1, maxRetries, retryCount + 1);
       } else {
-        console.error(`Failed to start server: ${err.message}`);
+        logger.error(`Failed to start server: ${err.message}`);
       }
     })
     .on('listening', () => {
       const actualPort = (server.address() as any).port;
-      console.error(`HTTP server listening on port ${actualPort}`);
-      console.error(`SSE endpoint: http://localhost:${actualPort}/sse`);
-      console.error(`Messages endpoint: http://localhost:${actualPort}/messages?sessionId=<SESSION_ID>`);
-      console.error("Available Twitter features:", twitterFeatures);
+      logger.info(`HTTP server listening on port ${actualPort}`);
+      logger.info(`SSE endpoint: http://localhost:${actualPort}/sse`);
+      logger.info(`Messages endpoint: http://localhost:${actualPort}/messages?sessionId=<SESSION_ID>`);
+      logger.info("Available Twitter features:", twitterFeatures);
     });
 }
 

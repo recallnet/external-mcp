@@ -1,18 +1,13 @@
 import { Scraper, SearchMode } from 'agent-twitter-client';
-import * as dotenv from 'dotenv';
-
-// Load environment variables
-dotenv.config();
+import { logger, getCredentials } from './env.js';
 
 // Define interfaces for Twitter API responses
-// Define the GrokMessage type
 type GrokRole = 'user' | 'assistant';
 interface GrokMessage {
   role: GrokRole;
   content: string;
 }
 
-// Define the GrokChatResponse type
 interface GrokChatResponse {
   conversationId: string;
   message: string;
@@ -22,107 +17,50 @@ interface GrokChatResponse {
   rateLimit?: any;
 }
 
-// Define the DirectMessagesResponse type
-interface TwitterDirectMessagesResponse {
-  conversations: any[];
-  users: any;
-  userId: string;
-}
-
-// Define the SendDirectMessageResponse type
-interface TwitterSendDirectMessageResponse {
-  message_create: any;
-}
-
-// Define the required environment variables for different Twitter functionalities
-const CREDENTIALS = {
-  basic: ['TWITTER_USERNAME', 'TWITTER_PASSWORD'],
-  email: ['TWITTER_EMAIL'],
-  api: ['TWITTER_APP_KEY', 'TWITTER_APP_SECRET', 'TWITTER_ACCESS_TOKEN', 'TWITTER_ACCESS_SECRET']
-};
-
-// Check if a set of environment variables are available
-function checkEnvVars(vars: string[]): boolean {
-  return vars.every(variable => !!process.env[variable] && process.env[variable]!.trim() !== '');
-}
-
-// Check which Twitter functionalities are available based on environment variables
+// Check which optional features are available
 export function getAvailableFeatures(): { [key: string]: boolean } {
   const features = {
-    basicAuth: checkEnvVars(CREDENTIALS.basic),
-    emailAuth: checkEnvVars(CREDENTIALS.email),
-    apiAuth: checkEnvVars(CREDENTIALS.api),
-    fullAuth: checkEnvVars([...CREDENTIALS.basic, ...CREDENTIALS.email]),
-    grokAccess: checkEnvVars([...CREDENTIALS.basic, ...CREDENTIALS.email]) // Grok requires full authentication
+    basicAuth: true, // Always true since env.ts enforces TWITTER_USERNAME, PASSWORD, EMAIL
+    emailAuth: true, // Always true since email is required
   };
 
-  // Ensure valid JSON by stringifying and parsing
   try {
-    // This will throw an error if the object can't be properly serialized
-    JSON.parse(JSON.stringify(features));
+    JSON.parse(JSON.stringify(features)); // Ensure valid JSON
     return features;
   } catch (error) {
-    console.error('Error formatting features as JSON:', error);
-    // Return a safe fallback
+    logger.error(`Error formatting features as JSON: ${error instanceof Error ? error.message : String(error)}`);
     return {
-      basicAuth: false,
-      emailAuth: false,
-      apiAuth: false,
-      fullAuth: false,
-      grokAccess: false
+      basicAuth: true,
+      emailAuth: true,
+      coinGeckoAccess: false,
     };
   }
 }
 
 // Create and initialize a Twitter scraper instance
 export async function createTwitterClient(): Promise<Scraper | null> {
-  const features = getAvailableFeatures();
-
-  if (!features.basicAuth) {
-    console.warn('Twitter client not initialized: Missing basic authentication credentials');
-    return null;
-  }
-
   try {
+    const credentials = getCredentials(); // Fetch credentials from secretBuffer
     const scraper = new Scraper();
 
-    // Initialize with credentials if available
-    if (features.apiAuth) {
-      console.log('Initializing Twitter client with API credentials');
-      // Note: setApiCredentials might not be available in the current version
-      // This is a fallback in case the API changes
-      const scraperAny = scraper as any;
-      if (typeof scraperAny.setApiCredentials === 'function') {
-        scraperAny.setApiCredentials(
-          process.env.TWITTER_APP_KEY!,
-          process.env.TWITTER_APP_SECRET!,
-          process.env.TWITTER_ACCESS_TOKEN!,
-          process.env.TWITTER_ACCESS_SECRET!
-        );
-      }
-    }
+    logger.info('Logging in to Twitter...');
+    await scraper.login(
+      credentials.username,
+      credentials.password,
+      credentials.email
+    );
 
-    // Login if credentials are available
-    if (features.basicAuth) {
-      console.log('Logging in to Twitter...');
-      await scraper.login(
-        process.env.TWITTER_USERNAME!,
-        process.env.TWITTER_PASSWORD!,
-        features.emailAuth ? process.env.TWITTER_EMAIL : undefined
-      );
-
-      const isLoggedIn = await scraper.isLoggedIn();
-      if (isLoggedIn) {
-        console.log('Successfully logged in to Twitter');
-      } else {
-        console.error('Failed to log in to Twitter');
-        return null;
-      }
+    const isLoggedIn = await scraper.isLoggedIn();
+    if (isLoggedIn) {
+      logger.info('Successfully logged in to Twitter');
+    } else {
+      logger.error('Failed to log in to Twitter');
+      return null;
     }
 
     return scraper;
   } catch (error) {
-    console.error('Error initializing Twitter client:', error);
+    logger.error(`Error initializing Twitter client: ${error instanceof Error ? error.message : String(error)}`);
     return null;
   }
 }
@@ -135,13 +73,14 @@ export async function safeTwitterCall<T>(
   try {
     const scraper = await createTwitterClient();
     if (!scraper) {
+      logger.warn('Twitter scraper not available');
       return defaultValue;
     }
 
     const result = await callback(scraper);
     return result;
   } catch (error) {
-    console.error('Error executing Twitter API call:', error);
+    logger.error(`Error executing Twitter API call: ${error instanceof Error ? error.message : String(error)}`);
     return defaultValue;
   }
 }
@@ -151,7 +90,6 @@ export async function getTweets(username: string, count: number = 10) {
   return safeTwitterCall(
     async (scraper) => {
       const tweets = await scraper.getTweets(username, count);
-      // Convert AsyncGenerator to array
       const result = [];
       for await (const tweet of tweets) {
         result.push(tweet);
@@ -180,7 +118,6 @@ export async function searchTweets(query: string, count: number = 20, mode: Sear
   return safeTwitterCall(
     async (scraper) => {
       const tweets = await scraper.searchTweets(query, count, mode);
-      // Convert AsyncGenerator to array
       const result = [];
       for await (const tweet of tweets) {
         result.push(tweet);
@@ -215,17 +152,10 @@ export async function retweet(tweetId: string) {
 export async function grokChat(messages: { role: string, content: string }[]) {
   return safeTwitterCall(
     async (scraper) => {
-      const features = getAvailableFeatures();
-      if (!features.grokAccess) {
-        throw new Error('Grok access requires full Twitter authentication');
-      }
-
-      // Convert messages to the correct format
       const grokMessages = messages.map(msg => ({
         role: msg.role as GrokRole,
         content: msg.content
       }));
-
       return await scraper.grokChat({ messages: grokMessages });
     },
     {
@@ -236,12 +166,10 @@ export async function grokChat(messages: { role: string, content: string }[]) {
   );
 }
 
-// Search for Twitter profiles
 export async function searchProfiles(query: string, count: number = 10) {
   return safeTwitterCall(
     async (scraper) => {
       const profiles = await scraper.searchProfiles(query, count);
-      // Convert AsyncGenerator to array
       const result = [];
       for await (const profile of profiles) {
         result.push(profile);
@@ -252,7 +180,6 @@ export async function searchProfiles(query: string, count: number = 10) {
   );
 }
 
-// Get user ID by screen name
 export async function getUserIdByScreenName(screenName: string) {
   return safeTwitterCall(
     async (scraper) => await scraper.getUserIdByScreenName(screenName),
@@ -260,7 +187,6 @@ export async function getUserIdByScreenName(screenName: string) {
   );
 }
 
-// Get screen name by user ID
 export async function getScreenNameByUserId(userId: string) {
   return safeTwitterCall(
     async (scraper) => await scraper.getScreenNameByUserId(userId),
@@ -268,12 +194,10 @@ export async function getScreenNameByUserId(userId: string) {
   );
 }
 
-// Get followers of a user
 export async function getFollowers(userId: string, count: number = 20) {
   return safeTwitterCall(
     async (scraper) => {
       const followers = await scraper.getFollowers(userId, count);
-      // Convert AsyncGenerator to array
       const result = [];
       for await (const follower of followers) {
         result.push(follower);
@@ -284,12 +208,10 @@ export async function getFollowers(userId: string, count: number = 20) {
   );
 }
 
-// Get users that a user is following
 export async function getFollowing(userId: string, count: number = 20) {
   return safeTwitterCall(
     async (scraper) => {
       const following = await scraper.getFollowing(userId, count);
-      // Convert AsyncGenerator to array
       const result = [];
       for await (const user of following) {
         result.push(user);
@@ -300,7 +222,6 @@ export async function getFollowing(userId: string, count: number = 20) {
   );
 }
 
-// Fetch home timeline
 export async function fetchHomeTimeline(count: number = 20, seenTweetIds: string[] = []) {
   return safeTwitterCall(
     async (scraper) => await scraper.fetchHomeTimeline(count, seenTweetIds),
@@ -308,7 +229,6 @@ export async function fetchHomeTimeline(count: number = 20, seenTweetIds: string
   );
 }
 
-// Fetch following timeline
 export async function fetchFollowingTimeline(count: number = 20, seenTweetIds: string[] = []) {
   return safeTwitterCall(
     async (scraper) => await scraper.fetchFollowingTimeline(count, seenTweetIds),
@@ -316,12 +236,10 @@ export async function fetchFollowingTimeline(count: number = 20, seenTweetIds: s
   );
 }
 
-// Get tweets and replies from a user
 export async function getTweetsAndReplies(username: string, count: number = 20) {
   return safeTwitterCall(
     async (scraper) => {
       const tweets = await scraper.getTweetsAndReplies(username, count);
-      // Convert AsyncGenerator to array
       const result = [];
       for await (const tweet of tweets) {
         result.push(tweet);
@@ -332,12 +250,10 @@ export async function getTweetsAndReplies(username: string, count: number = 20) 
   );
 }
 
-// Get tweets by user ID
 export async function getTweetsByUserId(userId: string, count: number = 20) {
   return safeTwitterCall(
     async (scraper) => {
       const tweets = await scraper.getTweetsByUserId(userId, count);
-      // Convert AsyncGenerator to array
       const result = [];
       for await (const tweet of tweets) {
         result.push(tweet);
@@ -348,7 +264,6 @@ export async function getTweetsByUserId(userId: string, count: number = 20) {
   );
 }
 
-// Get latest tweet from a user
 export async function getLatestTweet(username: string, includeRetweets: boolean = false) {
   return safeTwitterCall(
     async (scraper) => await scraper.getLatestTweet(username, includeRetweets),
@@ -356,7 +271,6 @@ export async function getLatestTweet(username: string, includeRetweets: boolean 
   );
 }
 
-// Get a specific tweet by ID
 export async function getTweet(tweetId: string) {
   return safeTwitterCall(
     async (scraper) => await scraper.getTweet(tweetId),
@@ -364,7 +278,6 @@ export async function getTweet(tweetId: string) {
   );
 }
 
-// Follow a user
 export async function followUser(username: string) {
   return safeTwitterCall(
     async (scraper) => {
@@ -375,7 +288,6 @@ export async function followUser(username: string) {
   );
 }
 
-// Get direct message conversations
 export async function getDirectMessageConversations(userId: string, cursor?: string): Promise<any> {
   return safeTwitterCall(
     async (scraper) => await scraper.getDirectMessageConversations(userId, cursor),
@@ -383,7 +295,6 @@ export async function getDirectMessageConversations(userId: string, cursor?: str
   );
 }
 
-// Send a direct message
 export async function sendDirectMessage(conversationId: string, text: string): Promise<any> {
   return safeTwitterCall(
     async (scraper) => await scraper.sendDirectMessage(conversationId, text),
@@ -391,7 +302,6 @@ export async function sendDirectMessage(conversationId: string, text: string): P
   );
 }
 
-// Get an article (long-form tweet)
 export async function getArticle(articleId: string) {
   return safeTwitterCall(
     async (scraper) => await scraper.getArticle(articleId),
@@ -399,7 +309,6 @@ export async function getArticle(articleId: string) {
   );
 }
 
-// Get all quoted tweets of a tweet
 export async function getAllQuotedTweets(tweetId: string, maxTweetsPerPage: number = 20) {
   return safeTwitterCall(
     async (scraper) => await scraper.getAllQuotedTweets(tweetId, maxTweetsPerPage),
@@ -407,7 +316,6 @@ export async function getAllQuotedTweets(tweetId: string, maxTweetsPerPage: numb
   );
 }
 
-// Get all retweeters of a tweet
 export async function getRetweetersOfTweet(tweetId: string) {
   return safeTwitterCall(
     async (scraper) => await scraper.getRetweetersOfTweet(tweetId),
@@ -415,24 +323,21 @@ export async function getRetweetersOfTweet(tweetId: string) {
   );
 }
 
-// Get tweets from a list
 export async function getListTweets(listId: string, count: number = 50) {
   return safeTwitterCall(
     async (scraper) => {
       try {
         const tweets = await scraper.fetchListTweets(listId, count);
-        // Convert to array if needed to ensure we have a length property
         if (tweets && Array.isArray(tweets)) {
           return tweets;
         } else if (tweets && tweets.tweets && Array.isArray(tweets.tweets)) {
           return tweets.tweets;
         } else {
-          // If we can't determine the structure, return an empty array
-          console.error('Unexpected response format from fetchListTweets');
+          logger.error('Unexpected response format from fetchListTweets');
           return [];
         }
       } catch (error) {
-        console.error('Error fetching list tweets:', error);
+        logger.error(`Error fetching list tweets: ${error instanceof Error ? error.message : String(error)}`);
         return [];
       }
     },

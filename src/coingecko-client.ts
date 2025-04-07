@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { logger, getCredentials } from './env.js';
 
 // Types
 export interface CoinGeckoFeatures {
@@ -49,7 +50,8 @@ const PRO_URL = 'https://pro-api.coingecko.com/api/v3';
  * Gets the API URL and headers based on whether an API key is provided
  */
 function getApiConfig() {
-  const apiKey = process.env.COINGECKO_API_KEY;
+  const credentials = getCredentials();
+  const apiKey = credentials.coinGeckoApiKey;
   if (apiKey) {
     return {
       baseURL: PRO_URL,
@@ -68,7 +70,8 @@ function getApiConfig() {
  * Checks what CoinGecko API features are available based on environment variables
  */
 export function getAvailableFeatures(): CoinGeckoFeatures {
-  const apiKey = process.env.COINGECKO_API_KEY;
+  const credentials = getCredentials();
+  const apiKey = credentials.coinGeckoApiKey;
   return {
     apiAccess: true, // Free API is always available
     proAccess: !!apiKey
@@ -103,7 +106,7 @@ export async function getTokenPrice(tokenId: string, currency: string = 'usd'): 
     }
     return null;
   } catch (error) {
-    console.error(`Error fetching price for ${tokenId}:`, error);
+    logger.error(`Error fetching price for ${tokenId}:`, error);
     return null;
   }
 }
@@ -134,7 +137,7 @@ export async function getTokenContracts(tokenId: string): Promise<TokenContract 
       platforms: response.data.platforms
     };
   } catch (error) {
-    console.error(`Error fetching contracts for ${tokenId}:`, error);
+    logger.error(`Error fetching contracts for ${tokenId}:`, error);
     return null;
   }
 }
@@ -166,7 +169,7 @@ export async function searchTokens(query: string, limit: number = 10): Promise<S
         market_cap_rank: coin.market_cap_rank
       }));
   } catch (error) {
-    console.error(`Error searching for ${query}:`, error);
+    logger.error(`Error searching for ${query}:`, error);
     return [];
   }
 }
@@ -194,7 +197,7 @@ export async function getTrendingTokens(limit: number = 10): Promise<SearchResul
         market_cap_rank: item.market_cap_rank
       }));
   } catch (error) {
-    console.error('Error fetching trending tokens:', error);
+    logger.error('Error fetching trending tokens:', error);
     return [];
   }
 }

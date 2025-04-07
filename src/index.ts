@@ -1,13 +1,12 @@
+#!/usr/bin/env node
+
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import * as dotenv from 'dotenv';
+import { logger } from './env.js';
 import * as twitterClient from './twitter-client.js';
 import * as substackClient from './substack-client.js';
 import * as coingeckoClient from './coingecko-client.js';
-
-// Load environment variables
-dotenv.config();
 
 /**
  * Converts HTML content to plain text while preserving basic structure
@@ -1458,30 +1457,24 @@ if (coingeckoFeatures.apiAccess) {
 
 // Start the server using stdio transport
 async function main() {
-  // Redirect console.log to console.error for debugging
-  // This prevents log messages from interfering with the MCP protocol
-  const originalConsoleLog = console.log;
-  console.log = function(...args: any[]) {
-    console.error(...args);
-  };
 
-  console.error("Starting data-skills-server...");
+  logger.info("Starting data-skills-server...");
 
   // Log available Twitter features
-  console.error("Available Twitter features:", twitterFeatures);
+  logger.info("Available Twitter features:", twitterFeatures);
 
   // Log available Substack features
-  console.error("Available Substack features:", substackFeatures);
+  logger.info("Available Substack features:", substackFeatures);
 
   // Log available CoinGecko features
-  console.error("Available CoinGecko features:", coingeckoFeatures);
+  logger.info("Available CoinGecko features:", coingeckoFeatures);
 
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("Server connected!");
+  logger.info("Server connected!");
 }
 
 main().catch(error => {
-  console.error("Error starting server:", error);
+  logger.info("Error starting server:", error);
   process.exit(1);
 });

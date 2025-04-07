@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { logger } from './env.js';
 
 /**
  * Normalizes a Substack ID to ensure it's a full domain
@@ -158,7 +159,7 @@ export async function getPosts(substackId: string, limit: number = 10, offset: n
     const response = await axios.get(url);
     return response.data;
   } catch (error) {
-    console.error(`Error fetching posts from ${substackId}:`, error);
+    logger.error(`Error fetching posts from ${substackId}:`, error);
     return [];
   }
 }
@@ -184,7 +185,7 @@ export async function getRecentPosts(substackId: string, limit: number = 10, off
     const response = await axios.get(url);
     return response.data;
   } catch (error) {
-    console.error(`Error fetching recent posts from ${substackId}:`, error);
+    logger.error(`Error fetching recent posts from ${substackId}:`, error);
     return [];
   }
 }
@@ -205,7 +206,7 @@ export async function getComments(substackId: string, postId: string): Promise<S
     const response = await axios.get(url);
     return response.data.comments || [];
   } catch (error) {
-    console.error(`Error fetching comments for post ${postId} from ${substackId}:`, error);
+    logger.error(`Error fetching comments for post ${postId} from ${substackId}:`, error);
     return [];
   }
 }
@@ -236,7 +237,7 @@ export async function getPostBySlug(substackId: string, slug: string): Promise<S
 
     return morePost || null;
   } catch (error) {
-    console.error(`Error fetching post ${slug} from ${substackId}:`, error);
+    logger.error(`Error fetching post ${slug} from ${substackId}:`, error);
     return null;
   }
 }
@@ -295,7 +296,7 @@ export async function getPostContent(postUrl: string): Promise<SubstackPostDetai
     };
 
   } catch (error: any) {
-    console.error(`Error fetching post content from ${postUrl}:`, error);
+    logger.error(`Error fetching post content from ${postUrl}:`, error);
     const errorMessage = error.response?.status
       ? `API Error: HTTP ${error.response.status} for ${error.config?.url || apiUrl}` // Now apiUrl is accessible
       : error.message;
@@ -331,7 +332,7 @@ export async function searchPosts(substackId: string, searchTerm: string, limit:
 
     return matchingPosts;
   } catch (error) {
-    console.error(`Error searching posts from ${substackId}:`, error);
+    logger.error(`Error searching posts from ${substackId}:`, error);
     return [];
   }
 }
@@ -430,13 +431,13 @@ export async function getPublicationInfo(substackId: string): Promise<any | null
 
         return publicationInfo;
       } catch (error) {
-        console.error(`Error extracting publication info from post:`, error);
+        logger.error(`Error extracting publication info from post:`, error);
       }
     }
 
     return null;
   } catch (error) {
-    console.error(`Error fetching publication info for ${substackId}:`, error);
+    logger.error(`Error fetching publication info for ${substackId}:`, error);
     return null;
   }
 }
@@ -511,7 +512,7 @@ export async function listCategories(): Promise<CategoryInfo[]> {
       name: category.name
     }));
   } catch (error: any) {
-    console.error('Error fetching Substack categories:', error);
+    logger.error('Error fetching Substack categories:', error);
     throw new Error(`Failed to fetch Substack categories: ${error.message}`);
   }
 }
@@ -547,7 +548,7 @@ export async function getCategoryNewsletters(
       custom_domain: pub.custom_domain
     }));
   } catch (error: any) {
-    console.error(`Error fetching newsletters for category ${categoryId}:`, error);
+    logger.error(`Error fetching newsletters for category ${categoryId}:`, error);
     throw new Error(`Failed to fetch newsletters for category ${categoryId}: ${error.message}`);
   }
 }
@@ -593,7 +594,7 @@ export async function getUserProfile(username: string): Promise<UserProfile> {
       subscriptions: subscriptions || []
     };
   } catch (error: any) {
-    console.error(`Error fetching user profile for ${username}:`, error);
+    logger.error(`Error fetching user profile for ${username}:`, error);
     throw new Error(`Failed to fetch user profile for ${username}: ${error.message}`);
   }
 }
@@ -622,7 +623,7 @@ export async function getNewsletterAuthors(substackId: string): Promise<AuthorIn
       bio: author.bio
     }));
   } catch (error: any) {
-    console.error(`Error fetching authors for ${substackId}:`, error);
+    logger.error(`Error fetching authors for ${substackId}:`, error);
     throw new Error(`Failed to fetch authors for ${substackId}: ${error.message}`);
   }
 }
@@ -665,7 +666,7 @@ export async function getNewsletterRecommendations(substackId: string): Promise<
       };
     });
   } catch (error: any) {
-    console.error(`Error fetching recommendations for ${substackId}:`, error);
+    logger.error(`Error fetching recommendations for ${substackId}:`, error);
     throw new Error(`Failed to fetch recommendations for ${substackId}: ${error.message}`);
   }
 }

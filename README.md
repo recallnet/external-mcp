@@ -26,76 +26,40 @@ A Model Context Protocol (MCP) server that provides access to various data feeds
   - Get trending tokens
   - Support for both free and Pro API access
 
-## Integrate with Claude
+## Run Using NPX
 
-1. Install and build the server:
-   ```bash
-   npm install
-   npm run build
-   ```
+### Using Environment Variables in Cursor/Claude/Windsurf Configuration
 
-2. In Claude, go to Settings -> Developer -> Add MCP endpoint
+Configure your MCP servers JSON file for your designated consuming environment by adding this MCP using the following format:
 
-3. Add the following configuration:
-   ```json
-   {
-     "mcpServers": {
-       "recall-data-omnifeeds": {
-         "command": "node",
-         "args": ["path to omnifeeds build they just created"],
-         "env": {
-           "PORT": "3008",
-           "TWITTER_USERNAME": "xx",
-           "TWITTER_PASSWORD": "xxx",
-           "TWITTER_EMAIL": "xxx",
-           "COINGECKO_API_KEY": "xxx" (optional)
-         }
-       }
-   }
-   ```
+```json
+{
+  "mcpServers": {
+    "data-omnifeeds-mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "github:recallnet/data-omnifeeds-mcp"
+      ],
+      "env": {
+        "TWITTER_USERNAME": "your_username",
+        "TWITTER_PASSWORD": "your_password",
+        "TWITTER_EMAIL": "your_email@example.com",
+        "COINGECKO_API_KEY": "xxx" // optional
+      }
+    }
+  }
+}
+```
+Please note that you may have to restart the consuming application environment (Claude, for example) for this MCP to take effect.
 
-4. Restart Claude
+### Verify the integration:
 
-5. Verify the integration:
-   - Look for a number next to a hammer icon in the bottom right of the prompt input
-   - Test the integration by asking:
-     ```
-     has anyone mentioned a cool coin lately on this list https://x.com/i/lists/1879866762147303588?
-     ```
+Test the integration by asking:
 
-## Installation
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/recall-data-omnifeeds.git
-   cd recall-data-omnifeeds
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Create a `.env` file with your API credentials:
-   ```
-   # Twitter credentials (if needed)
-   TWITTER_USERNAME=your_twitter_username
-   TWITTER_PASSWORD=your_twitter_password
-   TWITTER_EMAIL=your_twitter_email
-
-   # CoinGecko credentials (optional)
-   COINGECKO_API_KEY=your_api_key  # Optional: enables Pro API features
-   ```
-
-4. Build the project:
-   ```bash
-   npm run build
-   ```
-
-5. Start the server:
-   ```bash
-   npm start
-   ```
+```
+has anyone mentioned a cool coin lately on this list https://x.com/i/lists/1879866762147303588?
+```
 
 ## Usage
 
@@ -219,18 +183,6 @@ recall-data-omnifeeds/
 ├── dist/                    # Compiled JavaScript files
 ├── package.json            # Project configuration
 └── tsconfig.json          # TypeScript configuration
-```
-
-### Building
-
-```bash
-npm run build
-```
-
-### Running Tests
-
-```bash
-npm test
 ```
 
 ## License
