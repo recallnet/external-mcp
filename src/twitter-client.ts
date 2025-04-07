@@ -107,6 +107,16 @@ export async function getProfile(username: string) {
   );
 }
 
+export async function getUserBio(username: string): Promise<string | null> {
+  return safeTwitterCall(
+    async (scraper) => {
+      const user = await scraper.getProfile(username);
+      return user.biography;
+    },
+    null
+  );
+}
+
 export async function getTrends() {
   return safeTwitterCall(
     async (scraper) => await scraper.getTrends(),
