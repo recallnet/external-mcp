@@ -1,10 +1,18 @@
-# Recall Data Omnifeeds
+# @recallnet/external-mcp
 
-A Model Context Protocol (MCP) server that provides access to various data feeds including Twitter, Substack, and CoinGecko. This server enables AI models to interact with and analyze data from multiple sources through a unified interface.
+A modular Model Context Protocol (MCP) library that provides access to various external data feeds. The package is structured as modules that can be used independently or together, enabling AI models to interact with and analyze data from multiple sources through a unified interface.
+
+## Modules
+
+This package includes three primary modules:
+
+- **Twitter** (`@recallnet/external-mcp/twitter`): Access Twitter/X data and functionality
+- **Substack** (`@recallnet/external-mcp/substack`): Access Substack publications and content
+- **CoinGecko** (`@recallnet/external-mcp/coingecko`): Access cryptocurrency data from CoinGecko
 
 ## Features
 
-- **Twitter Integration**
+### Twitter Module
   - Get user profiles and tweets
   - Search tweets and profiles
   - Access trending topics
@@ -12,37 +20,72 @@ A Model Context Protocol (MCP) server that provides access to various data feeds
   - Direct messaging support
   - Grok chat integration
 
-- **Substack Integration**
+### Substack Module
   - Get publication information
   - Retrieve recent posts
   - Access post comments
   - Search posts
+  - Get simplified text content without heavy HTML markup
   - Support for both custom domains and subdomains
 
-- **CoinGecko Integration**
+### CoinGecko Module
   - Get current token prices
   - Retrieve contract addresses and chains
   - Search for tokens
   - Get trending tokens
   - Support for both free and Pro API access
 
+## Installation
+
+```bash
+npm install @recallnet/external-mcp
+```
+
+To use only specific modules:
+
+```bash
+# Import only what you need
+import { twitter } from '@recallnet/external-mcp/twitter';
+import { substack } from '@recallnet/external-mcp/substack';
+import { coingecko } from '@recallnet/external-mcp/coingecko';
+```
+
 ## Integrate with Claude
 
-1. Install and build the server:
+Each module can be integrated separately with Claude or used together.
+
+1. Install and build the package:
    ```bash
-   npm install
-   npm run build
+   npm install @recallnet/external-mcp
    ```
 
 2. In Claude, go to Settings -> Developer -> Add MCP endpoint
 
-3. Add the following configuration:
+3. For using individual modules, add configuration like:
    ```json
    {
      "mcpServers": {
-       "recall-data-omnifeeds": {
+       "recall-twitter": {
          "command": "node",
-         "args": ["path to omnifeeds build they just created"],
+         "args": ["path/to/twitter-server.js"],
+         "env": {
+           "PORT": "3008",
+           "TWITTER_USERNAME": "xx",
+           "TWITTER_PASSWORD": "xxx",
+           "TWITTER_EMAIL": "xxx"
+         }
+       }
+     }
+   }
+   ```
+
+   Or for using all modules together:
+   ```json
+   {
+     "mcpServers": {
+       "recall-external": {
+         "command": "node",
+         "args": ["path/to/combined-server.js"],
          "env": {
            "PORT": "3008",
            "TWITTER_USERNAME": "xx",
@@ -51,128 +94,115 @@ A Model Context Protocol (MCP) server that provides access to various data feeds
            "COINGECKO_API_KEY": "xxx" (optional)
          }
        }
+     }
    }
    ```
 
 4. Restart Claude
 
-5. Verify the integration:
-   - Look for a number next to a hammer icon in the bottom right of the prompt input
-   - Test the integration by asking:
-     ```
-     has anyone mentioned a cool coin lately on this list https://x.com/i/lists/1879866762147303588?
-     ```
+5. Verify the integration
 
-## Installation
+## Environment Setup
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/recall-data-omnifeeds.git
-   cd recall-data-omnifeeds
-   ```
+Create a `.env` file with your API credentials depending on which modules you're using:
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+```
+# Twitter credentials (required for Twitter module)
+TWITTER_USERNAME=your_twitter_username
+TWITTER_PASSWORD=your_twitter_password
+TWITTER_EMAIL=your_twitter_email
 
-3. Create a `.env` file with your API credentials:
-   ```
-   # Twitter credentials (if needed)
-   TWITTER_USERNAME=your_twitter_username
-   TWITTER_PASSWORD=your_twitter_password
-   TWITTER_EMAIL=your_twitter_email
-
-   # CoinGecko credentials (optional)
-   COINGECKO_API_KEY=your_api_key  # Optional: enables Pro API features
-   ```
-
-4. Build the project:
-   ```bash
-   npm run build
-   ```
-
-5. Start the server:
-   ```bash
-   npm start
-   ```
+# CoinGecko credentials (optional for CoinGecko module)
+COINGECKO_API_KEY=your_api_key  # Optional: enables Pro API features
+```
 
 ## Usage
 
-The server implements the Model Context Protocol (MCP) and can be used with any MCP-compatible client. Here are some example invocations:
+### Using Modules Independently
 
-### Twitter Examples
+Each module can be used as a standalone MCP server:
+
+```javascript
+// Twitter module
+import { createTwitterServer } from '@recallnet/external-mcp/twitter';
+
+const twitterServer = createTwitterServer();
+await twitterServer.start();
+
+// Substack module
+import { createSubstackServer } from '@recallnet/external-mcp/substack';
+
+const substackServer = createSubstackServer();
+await substackServer.start();
+
+// CoinGecko module
+import { createCoinGeckoServer } from '@recallnet/external-mcp/coingecko';
+
+const coinGeckoServer = createCoinGeckoServer();
+await coinGeckoServer.start();
+```
+
+### Using Combined Server
+
+```javascript
+import { createCombinedServer } from '@recallnet/external-mcp';
+
+const server = createCombinedServer({
+  modules: ['twitter', 'substack', 'coingecko']
+});
+await server.start();
+```
+
+### Example API Usage
+
+#### Twitter Examples
 
 ```javascript
 // Get a user's profile
-const result = await server.invoke("twitter-get-profile", {
+const result = await twitterServer.invoke("twitter-get-profile", {
   username: "example_user"
 });
 
 // Get recent tweets
-const result = await server.invoke("twitter-get-tweets", {
+const result = await twitterServer.invoke("twitter-get-tweets", {
   username: "example_user",
   count: 10
 });
-
-// Search tweets
-const result = await server.invoke("twitter-search-tweets", {
-  query: "example search",
-  count: 20
-});
 ```
 
-### Substack Examples
+#### Substack Examples
 
 ```javascript
 // Get publication info
-const result = await server.invoke("substack-get-publication-info", {
+const result = await substackServer.invoke("substack-get-publication-info", {
   substackId: "example.substack.com"
 });
 
-// Get recent posts
-const result = await server.invoke("substack-get-recent-posts", {
+// Get latest post with simplified text content (no HTML)
+const result = await substackServer.invoke("substack-get-latest-post-simplified", {
   substackId: "example.substack.com",
-  limit: 10
-});
-
-// Search posts
-const result = await server.invoke("substack-search-posts", {
-  substackId: "example.substack.com",
-  searchTerm: "example search",
-  limit: 10
+  includeMetadata: true // set to false to get only the text content
 });
 ```
 
-### CoinGecko Examples
+#### CoinGecko Examples
 
 ```javascript
 // Get token price
-const result = await server.invoke("coingecko-get-price", {
+const result = await coinGeckoServer.invoke("coingecko-get-price", {
   tokenId: "bitcoin",
   currency: "usd"
 });
 
-// Get contract addresses
-const result = await server.invoke("coingecko-get-contracts", {
-  tokenId: "usd-coin"
-});
-
-// Search tokens
-const result = await server.invoke("coingecko-search", {
-  query: "ethereum",
-  limit: 5
-});
-
 // Get trending tokens
-const result = await server.invoke("coingecko-trending", {
+const result = await coinGeckoServer.invoke("coingecko-trending", {
   limit: 5
 });
 ```
 
 ## API Reference
 
-### Twitter Tools
+### Twitter Module
 
 | Tool Name | Description | Parameters |
 |-----------|-------------|------------|
@@ -185,16 +215,18 @@ const result = await server.invoke("coingecko-trending", {
 | `twitter-retweet` | Retweet a tweet | `tweetId` (required) |
 | `twitter-follow-user` | Follow a user | `username` (required) |
 
-### Substack Tools
+### Substack Module
 
 | Tool Name | Description | Parameters |
 |-----------|-------------|------------|
 | `substack-get-publication-info` | Get publication information | `substackId` (required) |
 | `substack-get-recent-posts` | Get recent posts | `substackId` (required), `limit` (optional, default: 10) |
+| `substack-get-latest-post-simplified` | Get latest post with simplified text content | `substackId` (required), `includeMetadata` (optional, default: true) |
+| `substack-get-latest-post-content` | Get latest post with full content | `substackId` (required), `fullData` (optional, default: false), `simplifiedText` (optional, default: false) |
 | `substack-search-posts` | Search posts | `substackId` (required), `searchTerm` (required), `limit` (optional, default: 10) |
 | `substack-get-comments` | Get comments for a post | `substackId` (required), `postId` (required) |
 
-### CoinGecko Tools
+### CoinGecko Module
 
 | Tool Name | Description | Parameters |
 |-----------|-------------|------------|
@@ -204,24 +236,32 @@ const result = await server.invoke("coingecko-trending", {
 | `coingecko-search` | Search for tokens by query | `query` (required), `limit` (optional, default: 10) |
 | `coingecko-trending` | Get trending tokens | `limit` (optional, default: 10) |
 
+## Project Structure
+
+```
+@recallnet/external-mcp/
+├── src/
+│   ├── index.ts              # Main entry point for combined server
+│   ├── twitter/              # Twitter module
+│   │   ├── index.ts          # Twitter module entry point
+│   │   ├── client.ts         # Twitter API client
+│   │   └── server.ts         # Twitter MCP server implementation
+│   ├── substack/             # Substack module
+│   │   ├── index.ts          # Substack module entry point
+│   │   ├── client.ts         # Substack API client
+│   │   └── server.ts         # Substack MCP server implementation
+│   └── coingecko/            # CoinGecko module
+│       ├── index.ts          # CoinGecko module entry point
+│       ├── client.ts         # CoinGecko API client
+│       └── server.ts         # CoinGecko MCP server implementation
+├── dist/                     # Compiled JavaScript files
+├── package.json              # Project configuration
+└── tsconfig.json             # TypeScript configuration
+```
+
 ## Development
 
-### Project Structure
-
-```
-recall-data-omnifeeds/
-├── src/
-│   ├── index.ts              # Main server entry point
-│   ├── twitter-client.ts     # Twitter API client
-│   ├── substack-client.ts    # Substack API client
-│   ├── coingecko-client.ts   # CoinGecko API client
-│   └── tools/               # MCP tool implementations
-├── dist/                    # Compiled JavaScript files
-├── package.json            # Project configuration
-└── tsconfig.json          # TypeScript configuration
-```
-
-### Building
+### Building the Package
 
 ```bash
 npm run build
