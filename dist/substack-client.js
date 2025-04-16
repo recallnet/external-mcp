@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 /**
  * Normalizes a Substack ID to ensure it's a full domain
  * @param substackId The Substack ID (can be just the ID or a full domain)
@@ -6,7 +6,7 @@ import axios from 'axios';
  */
 function normalizeSubstackId(substackId) {
     // If it already contains a dot, assume it's a full domain
-    if (substackId.includes('.')) {
+    if (substackId.includes(".")) {
         return substackId;
     }
     // Otherwise, append .substack.com
@@ -19,7 +19,7 @@ function normalizeSubstackId(substackId) {
 export function getAvailableFeatures() {
     // Basic access is always available as the API is public
     return {
-        basicAccess: true
+        basicAccess: true,
     };
 }
 /**
@@ -99,14 +99,14 @@ export async function getPostBySlug(substackId, slug) {
         const normalizedId = normalizeSubstackId(substackId);
         // First try to find the post in the recent posts
         const recentPosts = await getRecentPosts(normalizedId, 50);
-        const post = recentPosts.find(p => p.slug === slug);
+        const post = recentPosts.find((p) => p.slug === slug);
         if (post) {
             return post;
         }
         // If not found in recent posts, try to search through more posts
         // This is a fallback and might not be efficient for large publications
         const morePosts = await getPosts(normalizedId, 50, 50);
-        const morePost = morePosts.find(p => p.slug === slug);
+        const morePost = morePosts.find((p) => p.slug === slug);
         return morePost || null;
     }
     catch (error) {
@@ -120,11 +120,11 @@ export async function getPostBySlug(substackId, slug) {
  * @returns A promise resolving to an object containing post details, or throws an error.
  */
 export async function getPostContent(postUrl) {
-    let apiUrl = ''; // Declare apiUrl outside the try block
+    let apiUrl = ""; // Declare apiUrl outside the try block
     try {
         const url = new URL(postUrl);
         const substackDomain = url.hostname; // e.g., example.substack.com
-        const pathParts = url.pathname.split('/').filter(part => part); // Get path parts, remove empty strings
+        const pathParts = url.pathname.split("/").filter((part) => part); // Get path parts, remove empty strings
         const slug = pathParts[pathParts.length - 1]; // Usually the last part
         if (!slug) {
             throw new Error(`Could not extract slug from URL: ${postUrl}`);
@@ -134,15 +134,15 @@ export async function getPostContent(postUrl) {
         // Fetch the specific post data
         const response = await axios.get(apiUrl, {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            }
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+            },
         });
         const postData = response.data;
         if (!postData) {
             throw new Error(`Could not retrieve post data from API for URL: ${postUrl}`);
         }
-        const title = postData.title || 'Untitled';
-        const author = postData.publishedBylines?.[0]?.name || 'Unknown author';
+        const title = postData.title || "Untitled";
+        const author = postData.publishedBylines?.[0]?.name || "Unknown author";
         const publish_date = postData.post_date || new Date().toISOString();
         const contentHtml = postData.body_html;
         if (!contentHtml) {
@@ -156,7 +156,7 @@ export async function getPostContent(postUrl) {
             contentHtml,
             canonical_url: postData.canonical_url,
             substackDomain,
-            slug
+            slug,
         };
     }
     catch (error) {
@@ -183,11 +183,15 @@ export async function searchPosts(substackId, searchTerm, limit = 10) {
         const posts = await getPosts(normalizedId, 50); // Get a larger batch to search through
         // Simple search implementation - checks if term appears in title, subtitle, or truncated text
         const searchTermLower = searchTerm.toLowerCase();
-        const matchingPosts = posts.filter(post => {
+        const matchingPosts = posts
+            .filter((post) => {
             return ((post.title && post.title.toLowerCase().includes(searchTermLower)) ||
-                (post.subtitle && post.subtitle.toLowerCase().includes(searchTermLower)) ||
-                (post.truncated_body_text && post.truncated_body_text.toLowerCase().includes(searchTermLower)));
-        }).slice(0, validLimit);
+                (post.subtitle &&
+                    post.subtitle.toLowerCase().includes(searchTermLower)) ||
+                (post.truncated_body_text &&
+                    post.truncated_body_text.toLowerCase().includes(searchTermLower)));
+        })
+            .slice(0, validLimit);
         return matchingPosts;
     }
     catch (error) {
@@ -213,8 +217,9 @@ export async function getPublicationInfo(substackId) {
                 const byline = firstPost.publishedBylines[0];
                 // Extract publication info from the first post's byline
                 if (byline.publicationUsers && byline.publicationUsers.length > 0) {
-                    const pubUser = byline.publicationUsers.find(pu => pu.publication && (pu.publication.subdomain === normalizedId ||
-                        pu.publication.custom_domain === normalizedId));
+                    const pubUser = byline.publicationUsers.find((pu) => pu.publication &&
+                        (pu.publication.subdomain === normalizedId ||
+                            pu.publication.custom_domain === normalizedId));
                     if (pubUser && pubUser.publication) {
                         return {
                             id: pubUser.publication.id,
@@ -228,8 +233,8 @@ export async function getPublicationInfo(substackId) {
                                 name: byline.name,
                                 handle: byline.handle,
                                 photo_url: byline.photo_url,
-                                bio: byline.bio
-                            }
+                                bio: byline.bio,
+                            },
                         };
                     }
                 }
@@ -238,7 +243,7 @@ export async function getPublicationInfo(substackId) {
                     name: byline.name,
                     handle: byline.handle,
                     photo_url: byline.photo_url,
-                    bio: byline.bio
+                    bio: byline.bio,
                 };
             }
             // If publishedBylines is not available, extract what we can from the post itself
@@ -254,25 +259,25 @@ export async function getPublicationInfo(substackId) {
                     try {
                         const domain = new URL(firstPost.canonical_url).hostname;
                         publicationInfo.domain = domain;
-                        publicationInfo.name = domain.split('.')[0]; // Simple extraction of name from domain
+                        publicationInfo.name = domain.split(".")[0]; // Simple extraction of name from domain
                     }
                     catch (e) {
                         // URL parsing failed, use normalizedId as fallback
                         publicationInfo.domain = normalizedId;
-                        publicationInfo.name = normalizedId.split('.')[0];
+                        publicationInfo.name = normalizedId.split(".")[0];
                     }
                 }
                 else {
                     // If no canonical URL, use normalizedId
                     publicationInfo.domain = normalizedId;
-                    publicationInfo.name = normalizedId.split('.')[0];
+                    publicationInfo.name = normalizedId.split(".")[0];
                 }
                 // Add a sample post for reference
                 publicationInfo.post_sample = {
                     id: firstPost.id,
                     title: firstPost.title,
                     subtitle: firstPost.subtitle,
-                    post_date: firstPost.post_date
+                    post_date: firstPost.post_date,
                 };
                 return publicationInfo;
             }
@@ -296,16 +301,16 @@ export async function listCategories() {
         const endpoint = "https://substack.com/api/v1/categories";
         const response = await axios.get(endpoint, {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            }
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+            },
         });
         return response.data.map((category) => ({
             id: category.id,
-            name: category.name
+            name: category.name,
         }));
     }
     catch (error) {
-        console.error('Error fetching Substack categories:', error);
+        console.error("Error fetching Substack categories:", error);
         throw new Error(`Failed to fetch Substack categories: ${error.message}`);
     }
 }
@@ -323,15 +328,15 @@ export async function getCategoryNewsletters(categoryId, page = 0, limit = 20) {
         const endpoint = `https://substack.com/api/v1/category/public/${categoryId}/all?page=${validPage}`;
         const response = await axios.get(endpoint, {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            }
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+            },
         });
         const newsletters = response.data.publications || [];
         return newsletters.slice(0, limit).map((pub) => ({
-            name: pub.name || '',
+            name: pub.name || "",
             domain: pub.custom_domain || `${pub.subdomain}.substack.com`,
             subdomain: pub.subdomain,
-            custom_domain: pub.custom_domain
+            custom_domain: pub.custom_domain,
         }));
     }
     catch (error) {
@@ -349,8 +354,8 @@ export async function getUserProfile(username) {
         const endpoint = `https://substack.com/api/v1/user/${username}/public_profile`;
         const response = await axios.get(endpoint, {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            }
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+            },
         });
         const userData = response.data;
         if (!userData) {
@@ -364,7 +369,7 @@ export async function getUserProfile(username) {
                 publication_id: pub.id,
                 publication_name: pub.name,
                 domain,
-                membership_state: sub.membership_state
+                membership_state: sub.membership_state,
             };
         });
         return {
@@ -374,7 +379,7 @@ export async function getUserProfile(username) {
             bio: userData.bio,
             photo_url: userData.photo_url,
             profile_set_up_at: userData.profile_set_up_at,
-            subscriptions: subscriptions || []
+            subscriptions: subscriptions || [],
         };
     }
     catch (error) {
@@ -393,15 +398,15 @@ export async function getNewsletterAuthors(substackId) {
         const endpoint = `https://${normalizedId}/api/v1/publication/users/ranked?public=true`;
         const response = await axios.get(endpoint, {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            }
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+            },
         });
         return response.data.map((author) => ({
             id: author.id,
             name: author.name,
             handle: author.handle,
             photo_url: author.photo_url,
-            bio: author.bio
+            bio: author.bio,
         }));
     }
     catch (error) {
@@ -426,8 +431,8 @@ export async function getNewsletterRecommendations(substackId) {
         const endpoint = `https://${normalizedId}/api/v1/recommendations/from/${publicationId}`;
         const response = await axios.get(endpoint, {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            }
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+            },
         });
         if (!response.data) {
             return [];
@@ -435,10 +440,10 @@ export async function getNewsletterRecommendations(substackId) {
         return response.data.map((rec) => {
             const publication = rec.recommendedPublication;
             return {
-                name: publication.name || '',
+                name: publication.name || "",
                 domain: publication.custom_domain || `${publication.subdomain}.substack.com`,
                 subdomain: publication.subdomain,
-                custom_domain: publication.custom_domain
+                custom_domain: publication.custom_domain,
             };
         });
     }

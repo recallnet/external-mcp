@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 
 /**
  * Normalizes a Substack ID to ensure it's a full domain
@@ -7,7 +7,7 @@ import axios from 'axios';
  */
 function normalizeSubstackId(substackId: string): string {
   // If it already contains a dot, assume it's a full domain
-  if (substackId.includes('.')) {
+  if (substackId.includes(".")) {
     return substackId;
   }
 
@@ -133,7 +133,7 @@ export interface SubstackComment {
 export function getAvailableFeatures(): SubstackFeatures {
   // Basic access is always available as the API is public
   return {
-    basicAccess: true
+    basicAccess: true,
   };
 }
 
@@ -144,7 +144,11 @@ export function getAvailableFeatures(): SubstackFeatures {
  * @param offset Offset for pagination (default: 0)
  * @returns Array of Substack posts
  */
-export async function getPosts(substackId: string, limit: number = 10, offset: number = 0): Promise<SubstackPost[]> {
+export async function getPosts(
+  substackId: string,
+  limit: number = 10,
+  offset: number = 0,
+): Promise<SubstackPost[]> {
   try {
     // Normalize the Substack ID
     const normalizedId = normalizeSubstackId(substackId);
@@ -170,7 +174,11 @@ export async function getPosts(substackId: string, limit: number = 10, offset: n
  * @param offset Offset for pagination (default: 0)
  * @returns Array of Substack posts
  */
-export async function getRecentPosts(substackId: string, limit: number = 10, offset: number = 0): Promise<SubstackPost[]> {
+export async function getRecentPosts(
+  substackId: string,
+  limit: number = 10,
+  offset: number = 0,
+): Promise<SubstackPost[]> {
   try {
     // Normalize the Substack ID
     const normalizedId = normalizeSubstackId(substackId);
@@ -195,7 +203,10 @@ export async function getRecentPosts(substackId: string, limit: number = 10, off
  * @param postId The ID of the post to get comments for
  * @returns Array of comments
  */
-export async function getComments(substackId: string, postId: string): Promise<SubstackComment[]> {
+export async function getComments(
+  substackId: string,
+  postId: string,
+): Promise<SubstackComment[]> {
   try {
     // Normalize the Substack ID
     const normalizedId = normalizeSubstackId(substackId);
@@ -205,7 +216,10 @@ export async function getComments(substackId: string, postId: string): Promise<S
     const response = await axios.get(url);
     return response.data.comments || [];
   } catch (error) {
-    console.error(`Error fetching comments for post ${postId} from ${substackId}:`, error);
+    console.error(
+      `Error fetching comments for post ${postId} from ${substackId}:`,
+      error,
+    );
     return [];
   }
 }
@@ -216,14 +230,17 @@ export async function getComments(substackId: string, postId: string): Promise<S
  * @param slug The slug of the post to retrieve
  * @returns The post if found, null otherwise
  */
-export async function getPostBySlug(substackId: string, slug: string): Promise<SubstackPost | null> {
+export async function getPostBySlug(
+  substackId: string,
+  slug: string,
+): Promise<SubstackPost | null> {
   try {
     // Normalize the Substack ID
     const normalizedId = normalizeSubstackId(substackId);
 
     // First try to find the post in the recent posts
     const recentPosts = await getRecentPosts(normalizedId, 50);
-    const post = recentPosts.find(p => p.slug === slug);
+    const post = recentPosts.find((p) => p.slug === slug);
 
     if (post) {
       return post;
@@ -232,7 +249,7 @@ export async function getPostBySlug(substackId: string, slug: string): Promise<S
     // If not found in recent posts, try to search through more posts
     // This is a fallback and might not be efficient for large publications
     const morePosts = await getPosts(normalizedId, 50, 50);
-    const morePost = morePosts.find(p => p.slug === slug);
+    const morePost = morePosts.find((p) => p.slug === slug);
 
     return morePost || null;
   } catch (error) {
@@ -246,12 +263,14 @@ export async function getPostBySlug(substackId: string, slug: string): Promise<S
  * @param postUrl The full URL of the Substack post (e.g., https://example.substack.com/p/post-slug)
  * @returns A promise resolving to an object containing post details, or throws an error.
  */
-export async function getPostContent(postUrl: string): Promise<SubstackPostDetails> {
-  let apiUrl = ''; // Declare apiUrl outside the try block
+export async function getPostContent(
+  postUrl: string,
+): Promise<SubstackPostDetails> {
+  let apiUrl = ""; // Declare apiUrl outside the try block
   try {
     const url = new URL(postUrl);
     const substackDomain = url.hostname; // e.g., example.substack.com
-    const pathParts = url.pathname.split('/').filter(part => part); // Get path parts, remove empty strings
+    const pathParts = url.pathname.split("/").filter((part) => part); // Get path parts, remove empty strings
     const slug = pathParts[pathParts.length - 1]; // Usually the last part
 
     if (!slug) {
@@ -262,25 +281,33 @@ export async function getPostContent(postUrl: string): Promise<SubstackPostDetai
     apiUrl = `https://${substackDomain}/api/v1/posts/${slug}`; // Assign value here
 
     // Fetch the specific post data
-    const response = await axios.get<SubstackPost & { body_html?: string }>(apiUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      }
-    });
+    const response = await axios.get<SubstackPost & { body_html?: string }>(
+      apiUrl,
+      {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        },
+      },
+    );
 
     const postData = response.data;
 
     if (!postData) {
-      throw new Error(`Could not retrieve post data from API for URL: ${postUrl}`);
+      throw new Error(
+        `Could not retrieve post data from API for URL: ${postUrl}`,
+      );
     }
 
-    const title = postData.title || 'Untitled';
-    const author = postData.publishedBylines?.[0]?.name || 'Unknown author';
+    const title = postData.title || "Untitled";
+    const author = postData.publishedBylines?.[0]?.name || "Unknown author";
     const publish_date = postData.post_date || new Date().toISOString();
     const contentHtml = postData.body_html;
 
     if (!contentHtml) {
-      throw new Error(`Could not retrieve post content body from API for ${postUrl}. It might be missing or restricted.`);
+      throw new Error(
+        `Could not retrieve post content body from API for ${postUrl}. It might be missing or restricted.`,
+      );
     }
 
     // Return structured data
@@ -291,9 +318,8 @@ export async function getPostContent(postUrl: string): Promise<SubstackPostDetai
       contentHtml,
       canonical_url: postData.canonical_url,
       substackDomain,
-      slug
+      slug,
     };
-
   } catch (error: any) {
     console.error(`Error fetching post content from ${postUrl}:`, error);
     const errorMessage = error.response?.status
@@ -310,7 +336,11 @@ export async function getPostContent(postUrl: string): Promise<SubstackPostDetai
  * @param limit Maximum number of posts to retrieve (default: 10, max: 50)
  * @returns Array of matching posts
  */
-export async function searchPosts(substackId: string, searchTerm: string, limit: number = 10): Promise<SubstackPost[]> {
+export async function searchPosts(
+  substackId: string,
+  searchTerm: string,
+  limit: number = 10,
+): Promise<SubstackPost[]> {
   try {
     // Normalize the Substack ID
     const normalizedId = normalizeSubstackId(substackId);
@@ -321,13 +351,17 @@ export async function searchPosts(substackId: string, searchTerm: string, limit:
 
     // Simple search implementation - checks if term appears in title, subtitle, or truncated text
     const searchTermLower = searchTerm.toLowerCase();
-    const matchingPosts = posts.filter(post => {
-      return (
-        (post.title && post.title.toLowerCase().includes(searchTermLower)) ||
-        (post.subtitle && post.subtitle.toLowerCase().includes(searchTermLower)) ||
-        (post.truncated_body_text && post.truncated_body_text.toLowerCase().includes(searchTermLower))
-      );
-    }).slice(0, validLimit);
+    const matchingPosts = posts
+      .filter((post) => {
+        return (
+          (post.title && post.title.toLowerCase().includes(searchTermLower)) ||
+          (post.subtitle &&
+            post.subtitle.toLowerCase().includes(searchTermLower)) ||
+          (post.truncated_body_text &&
+            post.truncated_body_text.toLowerCase().includes(searchTermLower))
+        );
+      })
+      .slice(0, validLimit);
 
     return matchingPosts;
   } catch (error) {
@@ -341,7 +375,9 @@ export async function searchPosts(substackId: string, searchTerm: string, limit:
  * @param substackId The Substack publication ID (subdomain or custom domain)
  * @returns Publication information if available
  */
-export async function getPublicationInfo(substackId: string): Promise<any | null> {
+export async function getPublicationInfo(
+  substackId: string,
+): Promise<any | null> {
   try {
     // Normalize the Substack ID
     const normalizedId = normalizeSubstackId(substackId);
@@ -358,11 +394,11 @@ export async function getPublicationInfo(substackId: string): Promise<any | null
 
         // Extract publication info from the first post's byline
         if (byline.publicationUsers && byline.publicationUsers.length > 0) {
-          const pubUser = byline.publicationUsers.find(pu =>
-            pu.publication && (
-              pu.publication.subdomain === normalizedId ||
-              pu.publication.custom_domain === normalizedId
-            )
+          const pubUser = byline.publicationUsers.find(
+            (pu) =>
+              pu.publication &&
+              (pu.publication.subdomain === normalizedId ||
+                pu.publication.custom_domain === normalizedId),
           );
 
           if (pubUser && pubUser.publication) {
@@ -378,8 +414,8 @@ export async function getPublicationInfo(substackId: string): Promise<any | null
                 name: byline.name,
                 handle: byline.handle,
                 photo_url: byline.photo_url,
-                bio: byline.bio
-              }
+                bio: byline.bio,
+              },
             };
           }
         }
@@ -389,7 +425,7 @@ export async function getPublicationInfo(substackId: string): Promise<any | null
           name: byline.name,
           handle: byline.handle,
           photo_url: byline.photo_url,
-          bio: byline.bio
+          bio: byline.bio,
         };
       }
 
@@ -408,16 +444,16 @@ export async function getPublicationInfo(substackId: string): Promise<any | null
           try {
             const domain = new URL(firstPost.canonical_url).hostname;
             publicationInfo.domain = domain;
-            publicationInfo.name = domain.split('.')[0]; // Simple extraction of name from domain
+            publicationInfo.name = domain.split(".")[0]; // Simple extraction of name from domain
           } catch (e) {
             // URL parsing failed, use normalizedId as fallback
             publicationInfo.domain = normalizedId;
-            publicationInfo.name = normalizedId.split('.')[0];
+            publicationInfo.name = normalizedId.split(".")[0];
           }
         } else {
           // If no canonical URL, use normalizedId
           publicationInfo.domain = normalizedId;
-          publicationInfo.name = normalizedId.split('.')[0];
+          publicationInfo.name = normalizedId.split(".")[0];
         }
 
         // Add a sample post for reference
@@ -425,7 +461,7 @@ export async function getPublicationInfo(substackId: string): Promise<any | null
           id: firstPost.id,
           title: firstPost.title,
           subtitle: firstPost.subtitle,
-          post_date: firstPost.post_date
+          post_date: firstPost.post_date,
         };
 
         return publicationInfo;
@@ -502,16 +538,17 @@ export async function listCategories(): Promise<CategoryInfo[]> {
     const endpoint = "https://substack.com/api/v1/categories";
     const response = await axios.get(endpoint, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      }
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+      },
     });
 
     return response.data.map((category: any) => ({
       id: category.id,
-      name: category.name
+      name: category.name,
     }));
   } catch (error: any) {
-    console.error('Error fetching Substack categories:', error);
+    console.error("Error fetching Substack categories:", error);
     throw new Error(`Failed to fetch Substack categories: ${error.message}`);
   }
 }
@@ -526,7 +563,7 @@ export async function listCategories(): Promise<CategoryInfo[]> {
 export async function getCategoryNewsletters(
   categoryId: number,
   page: number = 0,
-  limit: number = 20
+  limit: number = 20,
 ): Promise<NewsletterBasicInfo[]> {
   try {
     // Only fetch up to page 20 (API limit)
@@ -535,20 +572,26 @@ export async function getCategoryNewsletters(
 
     const response = await axios.get(endpoint, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      }
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+      },
     });
 
     const newsletters = response.data.publications || [];
     return newsletters.slice(0, limit).map((pub: any) => ({
-      name: pub.name || '',
+      name: pub.name || "",
       domain: pub.custom_domain || `${pub.subdomain}.substack.com`,
       subdomain: pub.subdomain,
-      custom_domain: pub.custom_domain
+      custom_domain: pub.custom_domain,
     }));
   } catch (error: any) {
-    console.error(`Error fetching newsletters for category ${categoryId}:`, error);
-    throw new Error(`Failed to fetch newsletters for category ${categoryId}: ${error.message}`);
+    console.error(
+      `Error fetching newsletters for category ${categoryId}:`,
+      error,
+    );
+    throw new Error(
+      `Failed to fetch newsletters for category ${categoryId}: ${error.message}`,
+    );
   }
 }
 
@@ -562,8 +605,9 @@ export async function getUserProfile(username: string): Promise<UserProfile> {
     const endpoint = `https://substack.com/api/v1/user/${username}/public_profile`;
     const response = await axios.get(endpoint, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      }
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+      },
     });
 
     const userData = response.data;
@@ -579,7 +623,7 @@ export async function getUserProfile(username: string): Promise<UserProfile> {
         publication_id: pub.id,
         publication_name: pub.name,
         domain,
-        membership_state: sub.membership_state
+        membership_state: sub.membership_state,
       };
     });
 
@@ -590,11 +634,13 @@ export async function getUserProfile(username: string): Promise<UserProfile> {
       bio: userData.bio,
       photo_url: userData.photo_url,
       profile_set_up_at: userData.profile_set_up_at,
-      subscriptions: subscriptions || []
+      subscriptions: subscriptions || [],
     };
   } catch (error: any) {
     console.error(`Error fetching user profile for ${username}:`, error);
-    throw new Error(`Failed to fetch user profile for ${username}: ${error.message}`);
+    throw new Error(
+      `Failed to fetch user profile for ${username}: ${error.message}`,
+    );
   }
 }
 
@@ -603,15 +649,18 @@ export async function getUserProfile(username: string): Promise<UserProfile> {
  * @param substackId The Substack publication ID (subdomain or custom domain)
  * @returns A promise resolving to an array of author information
  */
-export async function getNewsletterAuthors(substackId: string): Promise<AuthorInfo[]> {
+export async function getNewsletterAuthors(
+  substackId: string,
+): Promise<AuthorInfo[]> {
   try {
     const normalizedId = normalizeSubstackId(substackId);
     const endpoint = `https://${normalizedId}/api/v1/publication/users/ranked?public=true`;
 
     const response = await axios.get(endpoint, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      }
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+      },
     });
 
     return response.data.map((author: any) => ({
@@ -619,11 +668,13 @@ export async function getNewsletterAuthors(substackId: string): Promise<AuthorIn
       name: author.name,
       handle: author.handle,
       photo_url: author.photo_url,
-      bio: author.bio
+      bio: author.bio,
     }));
   } catch (error: any) {
     console.error(`Error fetching authors for ${substackId}:`, error);
-    throw new Error(`Failed to fetch authors for ${substackId}: ${error.message}`);
+    throw new Error(
+      `Failed to fetch authors for ${substackId}: ${error.message}`,
+    );
   }
 }
 
@@ -632,7 +683,9 @@ export async function getNewsletterAuthors(substackId: string): Promise<AuthorIn
  * @param substackId The Substack publication ID (subdomain or custom domain)
  * @returns A promise resolving to an array of recommended newsletters
  */
-export async function getNewsletterRecommendations(substackId: string): Promise<NewsletterBasicInfo[]> {
+export async function getNewsletterRecommendations(
+  substackId: string,
+): Promise<NewsletterBasicInfo[]> {
   try {
     // First we need to get at least one post to extract the publication ID
     const normalizedId = normalizeSubstackId(substackId);
@@ -647,8 +700,9 @@ export async function getNewsletterRecommendations(substackId: string): Promise<
 
     const response = await axios.get(endpoint, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      }
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+      },
     });
 
     if (!response.data) {
@@ -658,14 +712,17 @@ export async function getNewsletterRecommendations(substackId: string): Promise<
     return response.data.map((rec: any) => {
       const publication = rec.recommendedPublication;
       return {
-        name: publication.name || '',
-        domain: publication.custom_domain || `${publication.subdomain}.substack.com`,
+        name: publication.name || "",
+        domain:
+          publication.custom_domain || `${publication.subdomain}.substack.com`,
         subdomain: publication.subdomain,
-        custom_domain: publication.custom_domain
+        custom_domain: publication.custom_domain,
       };
     });
   } catch (error: any) {
     console.error(`Error fetching recommendations for ${substackId}:`, error);
-    throw new Error(`Failed to fetch recommendations for ${substackId}: ${error.message}`);
+    throw new Error(
+      `Failed to fetch recommendations for ${substackId}: ${error.message}`,
+    );
   }
 }

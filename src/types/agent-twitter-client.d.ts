@@ -2,7 +2,7 @@
  * Declaration file for agent-twitter-client
  * This uses 'any' typing to prevent TypeScript errors while maintaining runtime functionality
  */
-declare module 'agent-twitter-client' {
+declare module "agent-twitter-client" {
   export class Scraper {
     constructor(options?: any);
 
@@ -26,18 +26,30 @@ declare module 'agent-twitter-client' {
     getFollowers(userId: string, count?: number): Promise<any[]>;
     getFollowing(userId: string, count?: number): Promise<any[]>;
     fetchHomeTimeline(count?: number, seenTweetIds?: string[]): Promise<any[]>;
-    fetchFollowingTimeline(count?: number, seenTweetIds?: string[]): Promise<any[]>;
+    fetchFollowingTimeline(
+      count?: number,
+      seenTweetIds?: string[],
+    ): Promise<any[]>;
     getTweetsAndReplies(username: string, count?: number): Promise<any[]>;
     getTweetsByUserId(userId: string, count?: number): Promise<any[]>;
     getLatestTweet(username: string, includeRetweets?: boolean): Promise<any>;
     getTweet(tweetId: string): Promise<any>;
     followUser(username: string): Promise<any>;
-    getDirectMessageConversations(userId?: string, cursor?: string): Promise<any>;
+    getDirectMessageConversations(
+      userId?: string,
+      cursor?: string,
+    ): Promise<any>;
     sendDirectMessage(conversationId: string, text: string): Promise<any>;
     getArticle(articleId: string): Promise<any>;
-    getAllQuotedTweets(tweetId: string, maxTweetsPerPage?: number): Promise<any[]>;
+    getAllQuotedTweets(
+      tweetId: string,
+      maxTweetsPerPage?: number,
+    ): Promise<any[]>;
     getRetweetersOfTweet(tweetId: string): Promise<any[]>;
-    fetchListTweets(listId: string, count?: number): Promise<{ tweets: any[] } | any[]>;
+    fetchListTweets(
+      listId: string,
+      count?: number,
+    ): Promise<{ tweets: any[] } | any[]>;
   }
 
   export enum SearchMode {
@@ -45,7 +57,7 @@ declare module 'agent-twitter-client' {
     Trending,
     Photos,
     Videos,
-    People
+    People,
   }
 
   // Add any other exports as needed

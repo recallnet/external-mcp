@@ -1,6 +1,6 @@
-import axios from 'axios';
-const BASE_URL = 'https://api.coingecko.com/api/v3';
-const PRO_URL = 'https://pro-api.coingecko.com/api/v3';
+import axios from "axios";
+const BASE_URL = "https://api.coingecko.com/api/v3";
+const PRO_URL = "https://pro-api.coingecko.com/api/v3";
 /**
  * Gets the API URL and headers based on whether an API key is provided
  */
@@ -10,13 +10,13 @@ function getApiConfig() {
         return {
             baseURL: PRO_URL,
             headers: {
-                'x-cg-pro-api-key': apiKey
-            }
+                "x-cg-pro-api-key": apiKey,
+            },
         };
     }
     return {
         baseURL: BASE_URL,
-        headers: {}
+        headers: {},
     };
 }
 /**
@@ -26,7 +26,7 @@ export function getAvailableFeatures() {
     const apiKey = process.env.COINGECKO_API_KEY;
     return {
         apiAccess: true, // Free API is always available
-        proAccess: !!apiKey
+        proAccess: !!apiKey,
     };
 }
 /**
@@ -34,7 +34,7 @@ export function getAvailableFeatures() {
  * @param tokenId The CoinGecko token ID (e.g., 'bitcoin')
  * @param currency The currency to get the price in (default: 'usd')
  */
-export async function getTokenPrice(tokenId, currency = 'usd') {
+export async function getTokenPrice(tokenId, currency = "usd") {
     try {
         const config = getApiConfig();
         const response = await axios.get(`${config.baseURL}/simple/price`, {
@@ -42,8 +42,8 @@ export async function getTokenPrice(tokenId, currency = 'usd') {
             params: {
                 ids: tokenId,
                 vs_currencies: currency,
-                include_last_updated_at: true
-            }
+                include_last_updated_at: true,
+            },
         });
         if (response.data[tokenId]) {
             return {
@@ -51,7 +51,7 @@ export async function getTokenPrice(tokenId, currency = 'usd') {
                 symbol: tokenId, // Basic info only from this endpoint
                 name: tokenId,
                 current_price: response.data[tokenId][currency],
-                last_updated: new Date(response.data[tokenId].last_updated_at * 1000).toISOString()
+                last_updated: new Date(response.data[tokenId].last_updated_at * 1000).toISOString(),
             };
         }
         return null;
@@ -76,14 +76,14 @@ export async function getTokenContracts(tokenId) {
                 market_data: false,
                 community_data: false,
                 developer_data: false,
-                sparkline: false
-            }
+                sparkline: false,
+            },
         });
         return {
             id: response.data.id,
             symbol: response.data.symbol,
             name: response.data.name,
-            platforms: response.data.platforms
+            platforms: response.data.platforms,
         };
     }
     catch (error) {
@@ -102,18 +102,16 @@ export async function searchTokens(query, limit = 10) {
         const response = await axios.get(`${config.baseURL}/search`, {
             headers: config.headers,
             params: {
-                query
-            }
+                query,
+            },
         });
         // Ensure limit is within bounds
         const validLimit = Math.min(Math.max(1, limit), 100);
-        return response.data.coins
-            .slice(0, validLimit)
-            .map((coin) => ({
+        return response.data.coins.slice(0, validLimit).map((coin) => ({
             id: coin.id,
             name: coin.name,
             symbol: coin.symbol.toUpperCase(),
-            market_cap_rank: coin.market_cap_rank
+            market_cap_rank: coin.market_cap_rank,
         }));
     }
     catch (error) {
@@ -129,21 +127,19 @@ export async function getTrendingTokens(limit = 10) {
     try {
         const config = getApiConfig();
         const response = await axios.get(`${config.baseURL}/search/trending`, {
-            headers: config.headers
+            headers: config.headers,
         });
         // Ensure limit is within bounds
         const validLimit = Math.min(Math.max(1, limit), 10);
-        return response.data.coins
-            .slice(0, validLimit)
-            .map(({ item }) => ({
+        return response.data.coins.slice(0, validLimit).map(({ item }) => ({
             id: item.id,
             name: item.name,
             symbol: item.symbol.toUpperCase(),
-            market_cap_rank: item.market_cap_rank
+            market_cap_rank: item.market_cap_rank,
         }));
     }
     catch (error) {
-        console.error('Error fetching trending tokens:', error);
+        console.error("Error fetching trending tokens:", error);
         return [];
     }
 }

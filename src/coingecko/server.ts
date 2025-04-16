@@ -4,6 +4,7 @@ import {
 } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import * as coingeckoClient from "./client.js";
+import { fileURLToPath } from "url";
 
 /**
  * Configuration options for the CoinGecko server
@@ -43,7 +44,9 @@ export interface CoinGeckoServerOptions {
  * @param options Server configuration options
  * @returns Configured MCP server instance
  */
-export function createCoinGeckoServer(options: CoinGeckoServerOptions = {}): McpServer {
+export function createCoinGeckoServer(
+  options: CoinGeckoServerOptions = {},
+): McpServer {
   // Set default options
   const serverOptions = {
     name: options.name || "coingecko-mcp-server",
@@ -63,24 +66,34 @@ export function createCoinGeckoServer(options: CoinGeckoServerOptions = {}): Mcp
   });
 
   // Add CoinGecko resource for available features
-  server.resource("coingecko-features", "coingecko://features", async (uri) => ({
-    contents: [
-      {
-        uri: uri.href,
-        text: JSON.stringify(coingeckoFeatures, null, 2),
-      },
-    ],
-  }));
+  server.resource(
+    "coingecko-features",
+    "coingecko://features",
+    async (uri) => ({
+      contents: [
+        {
+          uri: uri.href,
+          text: JSON.stringify(coingeckoFeatures, null, 2),
+        },
+      ],
+    }),
+  );
 
   // Add basic tools if API access is available
-  if (coingeckoFeatures.apiAccess && (serverOptions.includeAllTools || serverOptions.includeBasicTools)) {
+  if (
+    coingeckoFeatures.apiAccess &&
+    (serverOptions.includeAllTools || serverOptions.includeBasicTools)
+  ) {
     // Get token price
     server.tool(
       "coingecko-get-price",
       "Gets the current price of a cryptocurrency token in a specific currency.",
       {
         tokenId: z.string().describe("CoinGecko token ID (e.g., 'bitcoin')"),
-        currency: z.string().default("usd").describe("Currency to get the price in (default: 'usd')"),
+        currency: z
+          .string()
+          .default("usd")
+          .describe("Currency to get the price in (default: 'usd')"),
       },
       async ({ tokenId, currency }) => {
         const price = await coingeckoClient.getTokenPrice(tokenId, currency);
@@ -89,11 +102,13 @@ export function createCoinGeckoServer(options: CoinGeckoServerOptions = {}): Mcp
           content: [
             {
               type: "text",
-              text: price ? JSON.stringify(price, null, 2) : `Price not found for ${tokenId}`,
+              text: price
+                ? JSON.stringify(price, null, 2)
+                : `Price not found for ${tokenId}`,
             },
           ],
         };
-      }
+      },
     );
 
     // Search tokens
@@ -116,18 +131,22 @@ export function createCoinGeckoServer(options: CoinGeckoServerOptions = {}): Mcp
           content: [
             {
               type: "text",
-              text: results.length > 0
-                ? JSON.stringify(results, null, 2)
-                : "No tokens found matching your query",
+              text:
+                results.length > 0
+                  ? JSON.stringify(results, null, 2)
+                  : "No tokens found matching your query",
             },
           ],
         };
-      }
+      },
     );
   }
 
   // Add advanced tools if API access is available
-  if (coingeckoFeatures.apiAccess && (serverOptions.includeAllTools || serverOptions.includeAdvancedTools)) {
+  if (
+    coingeckoFeatures.apiAccess &&
+    (serverOptions.includeAllTools || serverOptions.includeAdvancedTools)
+  ) {
     // Get token contracts
     server.tool(
       "coingecko-get-contracts",
@@ -148,7 +167,7 @@ export function createCoinGeckoServer(options: CoinGeckoServerOptions = {}): Mcp
             },
           ],
         };
-      }
+      },
     );
 
     // Get trending tokens
@@ -170,13 +189,14 @@ export function createCoinGeckoServer(options: CoinGeckoServerOptions = {}): Mcp
           content: [
             {
               type: "text",
-              text: trending.length > 0
-                ? JSON.stringify(trending, null, 2)
-                : "No trending tokens found",
+              text:
+                trending.length > 0
+                  ? JSON.stringify(trending, null, 2)
+                  : "No trending tokens found",
             },
           ],
         };
-      }
+      },
     );
   }
 
@@ -194,10 +214,41 @@ export function createCoinGeckoServer(options: CoinGeckoServerOptions = {}): Mcp
           },
         ],
       };
-    }
+    },
   );
 
   return server;
 }
 
 export default createCoinGeckoServer;
+
+/**
+ * Run the CoinGecko MCP server directly with stdio transport
+ */
+// When this file is run directly by Node.js
+if (
+  require.main === module ||
+  process.argv[1] === fileURLToPath(import.meta.url)
+) {
+  // Dynamic import to avoid TypeScript errors
+  const { StdioServerTransport } = await import(
+    "@modelcontextprotocol/sdk/server/stdio.js"
+  );
+
+  try {
+    console.error("Starting CoinGecko MCP server...");
+    const coingeckoServer = createCoinGeckoServer();
+    const transport = new StdioServerTransport();
+
+    // Handle stdin end for clean shutdown
+    process.stdin.on("end", () => {
+      process.exit(0);
+    });
+
+    await coingeckoServer.server.connect(transport);
+    console.error("CoinGecko MCP server started and listening");
+  } catch (error) {
+    console.error("Failed to start CoinGecko MCP server:", error);
+    process.exit(1);
+  }
+}

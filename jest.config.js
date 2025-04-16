@@ -1,9 +1,9 @@
 export default {
   transform: {
-    '^.+\\.tsx?$': ['ts-jest', { useESM: true }],
+    "^.+\\.tsx?$": ["ts-jest", { useESM: true }],
   },
-  extensionsToTreatAsEsm: ['.ts'],
+  extensionsToTreatAsEsm: [".ts"],
   moduleNameMapper: {
-    '^(\\.{1,2}/.*)\\.js$': '$1',
+    "^(\\.{1,2}/.*)\\.js$": "$1",
   },
 };
