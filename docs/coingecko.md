@@ -25,8 +25,9 @@ COINGECKO_API_KEY=your_api_key
 ### Basic setup
 
 ```javascript
-import { createCoinGeckoServer } from "@recallnet/external-mcp/coingecko";
 import dotenv from "dotenv";
+
+import { createCoinGeckoServer } from "@recallnet/external-mcp/coingecko";
 
 // Load environment variables
 dotenv.config();
@@ -50,6 +51,7 @@ The CoinGecko client automatically detects available features based on your conf
 
 ```javascript
 import { getAvailableFeatures } from "@recallnet/external-mcp/coingecko";
+
 const features = getAvailableFeatures();
 console.log(features);
 ```

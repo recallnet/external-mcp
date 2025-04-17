@@ -34,8 +34,9 @@ PORT=3008
 ### Basic setup
 
 ```javascript
-import { createCombinedServer } from "@recallnet/external-mcp";
 import dotenv from "dotenv";
+
+import { createCombinedServer } from "@recallnet/external-mcp";
 
 // Load environment variables
 dotenv.config();

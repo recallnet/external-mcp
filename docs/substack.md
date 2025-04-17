@@ -21,8 +21,9 @@ The Substack module doesn't require authentication for accessing public content.
 ### Basic setup
 
 ```javascript
-import { createSubstackServer } from "@recallnet/external-mcp/substack";
 import dotenv from "dotenv";
+
+import { createSubstackServer } from "@recallnet/external-mcp/substack";
 
 // Load environment variables (not required for Substack, but good practice)
 dotenv.config();
@@ -48,6 +49,7 @@ Substack publications can be identified by:
 
 ```javascript
 import { normalizeSubstackId } from "@recallnet/external-mcp/substack";
+
 const fullId = normalizeSubstackId("example"); // Returns 'example.substack.com'
 ```
 

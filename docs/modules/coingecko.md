@@ -19,8 +19,9 @@ COINGECKO_API_KEY=your_coingecko_api_key
 ## Usage
 
 ```javascript
-import { createCoinGeckoServer } from "@recallnet/external-mcp/coingecko";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+
+import { createCoinGeckoServer } from "@recallnet/external-mcp/coingecko";
 
 // Create server with options
 const coingeckoServer = createCoinGeckoServer({

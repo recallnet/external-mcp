@@ -22,8 +22,9 @@ TWITTER_ACCESS_SECRET=your_twitter_access_secret
 ## Usage
 
 ```javascript
-import { createTwitterServer } from "@recallnet/external-mcp/twitter";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+
+import { createTwitterServer } from "@recallnet/external-mcp/twitter";
 
 // Create server with options
 const twitterServer = createTwitterServer({

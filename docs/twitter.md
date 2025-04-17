@@ -27,8 +27,9 @@ TWITTER_EMAIL=your_twitter_email
 ### Basic setup
 
 ```javascript
-import { createTwitterServer } from "@recallnet/external-mcp/twitter";
 import dotenv from "dotenv";
+
+import { createTwitterServer } from "@recallnet/external-mcp/twitter";
 
 // Load environment variables
 dotenv.config();
@@ -61,6 +62,7 @@ Check available features:
 
 ```javascript
 import { getAvailableFeatures } from "@recallnet/external-mcp/twitter";
+
 const features = getAvailableFeatures();
 console.log(features);
 ```

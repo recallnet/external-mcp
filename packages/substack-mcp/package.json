@@ -1,0 +1,38 @@
+{
+  "name": "@recallnet/substack-mcp",
+  "version": "1.0.0",
+  "description": "A Model Context Protocol (MCP) server to retrieve posts, publications, comments, and content",
+  "main": "dist/server.js",
+  "type": "module",
+  "bin": "./dist/server.js",
+  "scripts": {
+    "build": "tsc && shx chmod +x dist/*.js",
+    "prepare": "npm run build",
+    "start": "node dist/server.js",
+    "dev": "ts-node src/server.ts",
+    "test": "NODE_ENV=test node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --config=../../jest.config.js --testPathPattern=packages/substack-mcp",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "clean": "rm -rf .turbo node_modules dist"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.8.0",
+    "@recallnet/mcp-types": "workspace:*",
+    "axios": "^1.6.7",
+    "cheerio": "^1.0.0",
+    "chalk": "^4.1.2",
+    "dotenv": "^16.3.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.19",
+    "@types/jest": "^29.5.11",
+    "shx": "^0.4.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}

@@ -11,8 +11,9 @@ npm install @recallnet/external-mcp
 ## Usage
 
 ```javascript
-import { createSubstackServer } from "@recallnet/external-mcp/substack";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+
+import { createSubstackServer } from "@recallnet/external-mcp/substack";
 
 // Create the server
 const substackServer = createSubstackServer({
@@ -266,6 +267,6 @@ All tools return formatted error objects when something goes wrong:
 
 ```javascript
 {
-  error: "Error message (code: 404)" // If applicable
+  error: "Error message (code: 404)"; // If applicable
 }
 ```

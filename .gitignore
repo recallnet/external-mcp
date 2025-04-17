@@ -1,5 +1,41 @@
+# Environment variables
 .env
-/node_modules
+.env.*
+!.env.example
+!.env.test
+
+# Dependencies
+node_modules
+**/node_modules
+
+# Build outputs
+dist
+**/dist
+@dist
+**/@dist
+.turbo
+.next
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editors and IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage
+
+# Cursor specific
 .cursorrules
 development_plan.md
 SUMMARY.md

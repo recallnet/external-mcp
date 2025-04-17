@@ -23,8 +23,9 @@ npm install @recallnet/external-mcp
 ### Quick Start
 
 ```javascript
-import { createCombinedServer } from "@recallnet/external-mcp";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+
+import { createCombinedServer } from "@recallnet/external-mcp";
 
 // Create a server with all modules
 const server = createCombinedServer();
@@ -41,10 +42,11 @@ server.connect(transport).then(() => {
 Each module can be used independently:
 
 ```javascript
-import { createTwitterServer } from "@recallnet/external-mcp/twitter";
-import { createSubstackServer } from "@recallnet/external-mcp/substack";
-import { createCoinGeckoServer } from "@recallnet/external-mcp/coingecko";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+
+import { createCoinGeckoServer } from "@recallnet/external-mcp/coingecko";
+import { createSubstackServer } from "@recallnet/external-mcp/substack";
+import { createTwitterServer } from "@recallnet/external-mcp/twitter";
 
 // Create individual servers
 const twitterServer = createTwitterServer();
