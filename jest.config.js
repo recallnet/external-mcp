@@ -8,7 +8,6 @@ module.exports = {
     "^(\\.{1,2}/.*)\\.js$": "$1",
   },
   testEnvironment: "node",
-  preset: "ts-jest/presets/default-esm",
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
   testMatch: ["**/__tests__/**/*.test.ts"],
   verbose: true,

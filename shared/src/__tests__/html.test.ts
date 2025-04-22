@@ -1,6 +1,7 @@
 import {
   extractStructuredContent,
   htmlToPlainText,
+  PostWithHtml,
   processPostContent,
   processPostsContent,
   stripHtml,
@@ -23,6 +24,11 @@ global.describe = describe;
 global.beforeEach = beforeEach;
 // @ts-ignore
 global.afterEach = afterEach;
+
+interface ProcessedPost {
+  title: string;
+  body_text: string;
+}
 
 describe("HTML Utilities", () => {
   describe("htmlToPlainText", () => {
@@ -89,7 +95,7 @@ describe("HTML Utilities", () => {
       const processed = processPostContent(post);
 
       expect(processed).toHaveProperty("body_text");
-      expect(processed.body_text).toBe("This is HTML content");
+      expect((processed as unknown as ProcessedPost).body_text).toBe("This is HTML content");
       expect(processed).not.toHaveProperty("body_html");
     });
 
@@ -101,11 +107,14 @@ describe("HTML Utilities", () => {
     });
 
     it("should handle null input", () => {
-      expect(processPostContent(null)).toBeNull();
+      expect(processPostContent(null as unknown as PostWithHtml)).toBeNull();
     });
   });
 
   describe("processPostsContent", () => {
+    // Define interface for the expected result type
+
+
     it("should process an array of posts", () => {
       const posts = [
         { title: "Post 1", body_html: "<p>Content 1</p>" },
@@ -117,8 +126,8 @@ describe("HTML Utilities", () => {
       expect(Array.isArray(processed)).toBe(true);
       expect(processed).toHaveLength(2);
       expect(processed[0]).toHaveProperty("body_text");
-      expect(processed[0].body_text).toBe("Content 1");
-      expect(processed[1].body_text).toBe("Content 2");
+      expect((processed[0] as unknown as ProcessedPost).body_text).toBe("Content 1");
+      expect((processed[1] as unknown as ProcessedPost).body_text).toBe("Content 2");
     });
 
     it("should handle empty arrays", () => {

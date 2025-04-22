@@ -35,6 +35,12 @@ export interface CoinGeckoServerOptions {
    * Only relevant if includeAllTools is false
    */
   includeAdvancedTools?: boolean;
+
+  /**
+   * Whether to include the features tool that shows API capabilities
+   * (default: false)
+   */
+  includeFeaturesTool?: boolean;
 }
 
 /**
@@ -52,6 +58,7 @@ export function createCoinGeckoServer(
     includeAllTools: options.includeAllTools !== false, // Default to true
     includeBasicTools: options.includeBasicTools !== false, // Default to true
     includeAdvancedTools: options.includeAdvancedTools !== false, // Default to true
+    includeFeaturesTool: options.includeFeaturesTool === true, // Default to false
   };
 
   // Get available CoinGecko features
@@ -85,23 +92,20 @@ export function createCoinGeckoServer(
     // Get token price
     server.tool(
       "coingecko-get-price",
-      "Gets the current price of a cryptocurrency token in a specific currency.",
+      "Gets the current price and market data of a cryptocurrency token in USD, including market capitalization, 24h volume, and 24h price change. The tokenId parameter must be the CoinGecko internal ID (not the symbol). You can find a token's ID using the coingecko-search tool.",
       {
-        tokenId: z.string().describe("CoinGecko token ID (e.g., 'bitcoin')"),
-        currency: z
-          .string()
-          .default("usd")
-          .describe("Currency to get the price in (default: 'usd')"),
+        tokenId: z.string().describe("CoinGecko token ID (e.g., 'bitcoin' for Bitcoin, 'ethereum' for Ethereum). Use the coingecko-search tool to find a token's ID."),
       },
-      async ({ tokenId, currency }) => {
-        const price = await coingeckoClient.getTokenPrice(tokenId, currency);
+      async ({ tokenId }) => {
+        // Call the refactored getTokenPrice which now only takes tokenId and currency
+        const tokenInfo = await coingeckoClient.getTokenPrice(tokenId, "usd");
 
         return {
           content: [
             {
               type: "text",
-              text: price
-                ? JSON.stringify(price, null, 2)
+              text: tokenInfo
+                ? JSON.stringify(tokenInfo, null, 2)
                 : `Price not found for ${tokenId}`,
             },
           ],
@@ -112,9 +116,9 @@ export function createCoinGeckoServer(
     // Search tokens
     server.tool(
       "coingecko-search",
-      "Searches for cryptocurrency tokens that match the provided query.",
+      "Searches for cryptocurrency tokens that match the provided query. Returns the token symbol, name, market rank, and most importantly the CoinGecko asset ID which is required to use other tools like coingecko-get-price.",
       {
-        query: z.string().describe("Search query"),
+        query: z.string().describe("Search query for cryptocurrency name or symbol (e.g., 'bitcoin', 'ethereum', 'BTC', 'ETH')"),
         limit: z
           .number()
           .min(1)
@@ -148,9 +152,9 @@ export function createCoinGeckoServer(
     // Get token contracts
     server.tool(
       "coingecko-get-contracts",
-      "Gets contract addresses and chains for a specific token.",
+      "Gets contract addresses and blockchain platforms for a specific cryptocurrency token. This is useful for finding the token's smart contract addresses across different blockchains.",
       {
-        tokenId: z.string().describe("CoinGecko token ID (e.g., 'ethereum')"),
+        tokenId: z.string().describe("CoinGecko token ID (e.g., 'ethereum' for Ethereum). Use the coingecko-search tool to find a token's ID."),
       },
       async ({ tokenId }) => {
         const contracts = await coingeckoClient.getTokenContracts(tokenId);
@@ -171,7 +175,7 @@ export function createCoinGeckoServer(
     // Get trending tokens
     server.tool(
       "coingecko-trending",
-      "Gets a list of trending cryptocurrency tokens.",
+      "Gets a list of currently trending cryptocurrency tokens based on CoinGecko search and popularity metrics. Each result includes the token's ID which can be used with other tools.",
       {
         limit: z
           .number()
@@ -199,21 +203,23 @@ export function createCoinGeckoServer(
   }
 
   // Add Pro API features tool to check availability
-  server.tool(
-    "coingecko-get-features",
-    "Gets information about available CoinGecko API features based on your configuration.",
-    {},
-    async () => {
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify(coingeckoFeatures, null, 2),
-          },
-        ],
-      };
-    },
-  );
+  if (serverOptions.includeFeaturesTool) {
+    server.tool(
+      "coingecko-get-features",
+      "Gets information about available CoinGecko API features based on your configuration. Shows whether you're using the free API or the Pro API with an API key.",
+      {},
+      async () => {
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(coingeckoFeatures, null, 2),
+            },
+          ],
+        };
+      }
+    );
+  }
 
   return server;
 }

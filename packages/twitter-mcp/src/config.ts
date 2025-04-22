@@ -43,10 +43,9 @@ export const config: Config = {
 // Validate environment
 export function validateEnv(): void {
   const requiredVars: (keyof Config)[] = [
-    "TWITTER_API_KEY",
-    "TWITTER_API_SECRET_KEY",
-    "TWITTER_ACCESS_TOKEN",
-    "TWITTER_ACCESS_TOKEN_SECRET",
+    "TWITTER_USERNAME",
+    "TWITTER_PASSWORD",
+    "TWITTER_EMAIL",
   ];
 
   const recommendedVars: (keyof Config)[] = ["PROXY_URL", "DEBUG"];

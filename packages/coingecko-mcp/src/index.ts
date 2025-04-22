@@ -13,12 +13,4 @@ export * from "./client.js";
 export { createCoinGeckoServer } from "./server.js";
 export type { CoinGeckoServerOptions } from "./server.js";
 
-// Re-export important interfaces for better discoverability
-export type {
-  CoinGeckoFeatures,
-  TokenPrice,
-  TokenContract,
-  SearchResult,
-} from "./client.js";
-
 export default createServer;

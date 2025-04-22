@@ -500,7 +500,7 @@ export async function searchPosts(
 
     // For search with pagination, we need to get a larger set of posts
     // and then manually paginate, since there's no direct search API
-    const searchPoolSize = 100; // How many posts to search through
+    const searchPoolSize = 10; // How many posts to search through
 
     // Get recent posts and filter by search term
     const recentPosts = await getRecentPosts(normalizedId, searchPoolSize);

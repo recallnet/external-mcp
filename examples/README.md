@@ -7,7 +7,6 @@ This directory contains examples of how to use the `@recallnet/external-mcp` pac
 - `twitter/` - Examples for using the Twitter module
 - `substack/` - Examples for using the Substack module
 - `coingecko/` - Examples for using the CoinGecko module
-- `combined/` - Examples for using all modules together in a combined server
 
 ## Getting Started
 
@@ -35,9 +34,6 @@ This directory contains examples of how to use the `@recallnet/external-mcp` pac
 
    # CoinGecko example
    node coingecko/basic-coingecko-server.js
-
-   # Combined server example
-   node combined/combined-server.js
    ```
 
 ## Twitter Module Examples
@@ -69,14 +65,6 @@ The CoinGecko module examples demonstrate how to:
 - Search for tokens and get trending tokens
 
 Free tier works out of the box, Pro API key optional.
-
-## Combined Server Examples
-
-The combined server examples demonstrate how to:
-
-- Create a server with multiple modules
-- Configure module-specific options
-- Access tools from different modules through a unified interface
 
 ## Integration with Claude or Other AI Systems
 

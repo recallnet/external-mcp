@@ -81,6 +81,25 @@ export const GET_USER_TWEETS_TOOL: Tool = {
   },
 };
 
+export const GET_LIST_TWEETS_TOOL: Tool = {
+  name: "getListTweets",
+  description: "Get tweets from a Twitter list",
+  inputSchema: {
+    type: "object",
+    properties: {
+      listId: {
+        type: "string",
+        description: "The ID of the Twitter list",
+      },
+      count: {
+        type: "number",
+        description: "The maximum number of tweets to retrieve (default: 50)",
+      },
+    },
+    required: ["listId"],
+  },
+};
+
 export const SEND_TWEET_TOOL: Tool = {
   name: "sendTweet",
   description: "Post a new tweet with optional media and/or as a reply",
@@ -375,6 +394,7 @@ export const twitterTools: Tool[] = [
   // Tweet tools
   GET_TWEET_TOOL,
   GET_USER_TWEETS_TOOL,
+  GET_LIST_TWEETS_TOOL,
   SEND_TWEET_TOOL,
   LIKE_TWEET_TOOL,
   RETWEET_TOOL,
