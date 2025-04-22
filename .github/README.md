@@ -12,11 +12,13 @@ This repository is configured to support local testing of GitHub Actions workflo
 The workflow requires several secrets/environment variables to function properly. These are used for integration tests with third-party services.
 
 1. Copy the `.secrets.example` file to `.secrets` in the root directory:
+
    ```bash
    cp .secrets.example .secrets
    ```
 
 2. Edit `.secrets` and add your actual credentials:
+
    ```
    TWITTER_USERNAME=your_twitter_username
    TWITTER_PASSWORD=your_twitter_password
@@ -30,6 +32,7 @@ The workflow requires several secrets/environment variables to function properly
 ## Running Workflows Locally
 
 This repository includes an `.actrc` file that configures common options. The configuration includes:
+
 - Using the proper Ubuntu container image
 - Automatically loading secrets from the `.secrets` file
 
@@ -50,7 +53,7 @@ act -W .github/workflows/ci.yml
 If you're using an Apple M-series chip, you may need to specify the container architecture:
 
 ```bash
-act -W .github/workflows/ci.yml --container-architecture linux/amd64
+act -W .github/workflows/ci.yml --container-architecture linux/arm64
 ```
 
 ### Running Specific Jobs
@@ -70,11 +73,13 @@ act -j docs
 ### Debugging Tips
 
 1. **View more detailed output**:
+
    ```bash
    act -v
    ```
 
 2. **Dry run (don't actually execute anything)**:
+
    ```bash
    act -n
    ```

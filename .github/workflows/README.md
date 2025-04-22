@@ -25,12 +25,12 @@ The `ci.yml` workflow handles continuous integration tasks:
 
 This workflow requires the following repository secrets:
 
-| Secret | Purpose |
-|--------|---------|
-| `TWITTER_USERNAME` | Twitter authentication for integration tests |
-| `TWITTER_PASSWORD` | Twitter authentication for integration tests |
-| `TWITTER_EMAIL` | Twitter authentication for integration tests |
-| `COINGECKO_API_KEY` | CoinGecko API access for integration tests |
+| Secret              | Purpose                                      |
+| ------------------- | -------------------------------------------- |
+| `TWITTER_USERNAME`  | Twitter authentication for integration tests |
+| `TWITTER_PASSWORD`  | Twitter authentication for integration tests |
+| `TWITTER_EMAIL`     | Twitter authentication for integration tests |
+| `COINGECKO_API_KEY` | CoinGecko API access for integration tests   |
 
 ### Testing Locally
 
@@ -42,4 +42,4 @@ To modify the workflow:
 
 1. Edit `.github/workflows/ci.yml`
 2. For local testing, update the `.actrc` file and `.secrets` as needed
-3. Test locally with `act` before pushing changes 
+3. Test locally with `act` before pushing changes

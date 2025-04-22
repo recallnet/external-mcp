@@ -42,5 +42,13 @@
   "packageManager": "pnpm@9.12.3",
   "engines": {
     "node": ">=20"
+  },
+  "workspaces": [
+    "shared",
+    "packages/*"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/recallnet/external-mcp.git"
   }
 }

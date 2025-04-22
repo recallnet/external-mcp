@@ -19,5 +19,13 @@
   },
   "peerDependencies": {
     "@modelcontextprotocol/sdk": "^1.8.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/recallnet/external-mcp.git",
+    "directory": "shared"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
