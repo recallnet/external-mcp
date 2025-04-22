@@ -11,34 +11,106 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
+        node-version: [20.x]
+    
+    env:
+      TWITTER_USERNAME: ${{ secrets.TWITTER_USERNAME }}
+      TWITTER_PASSWORD: ${{ secrets.TWITTER_PASSWORD }}
+      TWITTER_EMAIL: ${{ secrets.TWITTER_EMAIL }}
+      COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: "npm"
-      - run: npm ci
-      - run: npm run build
-      - run: npm run format
-      - run: npm test
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9.12.3
+          run_install: false
 
-  module-tests:
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+      
+      - name: Install dependencies
+        run: pnpm install --ignore-scripts
+
+      - name: Build
+        run: pnpm build
+        
+      - name: Lint
+        run: pnpm lint
+      
+      - name: Format check
+        run: pnpm format:check
+      
+      - name: Setup environment for tests
+        run: |
+          # Create .env files for packages that need them
+          echo "TWITTER_USERNAME=$TWITTER_USERNAME" > packages/twitter-mcp/.env
+          echo "TWITTER_PASSWORD=$TWITTER_PASSWORD" >> packages/twitter-mcp/.env
+          echo "TWITTER_EMAIL=$TWITTER_EMAIL" >> packages/twitter-mcp/.env
+          echo "COINGECKO_API_KEY=$COINGECKO_API_KEY" > packages/coingecko-mcp/.env
+        
+      - name: Test
+        run: pnpm test
+
+  docs:
     runs-on: ubuntu-latest
     needs: build
-    strategy:
-      matrix:
-        module: [twitter, substack, coingecko, utils]
+    env:
+      TWITTER_USERNAME: ${{ secrets.TWITTER_USERNAME }}
+      TWITTER_PASSWORD: ${{ secrets.TWITTER_PASSWORD }}
+      TWITTER_EMAIL: ${{ secrets.TWITTER_EMAIL }}
+      COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Use Node.js 20.x
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20.x
-          cache: "npm"
-      - run: npm ci
-      - run: npm run build:${{ matrix.module }}
-      - run: npm run test:${{ matrix.module }}
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9.12.3
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+      
+      - name: Install dependencies
+        run: pnpm install --ignore-scripts
+        
+      - name: Build docs
+        run: pnpm docs:build
+        
+      - name: Check docs
+        run: pnpm docs:check

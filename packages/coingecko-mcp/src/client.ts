@@ -1,5 +1,5 @@
-import axios from "axios";
-import * as dotenv from "dotenv";
+import axios from 'axios';
+import * as dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config();
@@ -68,8 +68,8 @@ export interface DetailedTokenInfo {
   // market_cap_rank?: number;
 }
 
-const BASE_URL = "https://api.coingecko.com/api/v3";
-const PRO_URL = "https://pro-api.coingecko.com/api/v3";
+const BASE_URL = 'https://api.coingecko.com/api/v3';
+const PRO_URL = 'https://pro-api.coingecko.com/api/v3';
 
 /**
  * Gets the API URL and headers based on whether an API key is provided
@@ -81,7 +81,7 @@ function getApiConfig() {
     return {
       baseURL: PRO_URL,
       headers: {
-        "x-cg-pro-api-key": apiKey,
+        'x-cg-pro-api-key': apiKey,
       },
     };
   }
@@ -113,25 +113,22 @@ export function getAvailableFeatures(): CoinGeckoFeatures {
  */
 export async function getTokenPrice(
   tokenId: string,
-  currency: string = "usd",
+  currency = 'usd',
 ): Promise<DetailedTokenInfo | null> {
   try {
     const config = getApiConfig(); // Assumes this provides baseURL and headers
-    const response = await axios.get(
-      `${config.baseURL}/coins/${tokenId}`,
-      {
-        headers: config.headers,
-        // Parameters to optimize the response size (optional, defaults might be okay)
-        params: {
-          localization: 'false', // Don't need localized descriptions
-          tickers: 'false',      // Don't need full ticker list here
-          market_data: 'true',   // Need market data
-          community_data: 'false',// Don't need community data
-          developer_data: 'false',// Don't need developer data
-          sparkline: 'false',    // Don't need sparkline
-        },
-      }
-    );
+    const response = await axios.get(`${config.baseURL}/coins/${tokenId}`, {
+      headers: config.headers,
+      // Parameters to optimize the response size (optional, defaults might be okay)
+      params: {
+        localization: 'false', // Don't need localized descriptions
+        tickers: 'false', // Don't need full ticker list here
+        market_data: 'true', // Need market data
+        community_data: 'false', // Don't need community data
+        developer_data: 'false', // Don't need developer data
+        sparkline: 'false', // Don't need sparkline
+      },
+    });
 
     const data = response.data;
     if (!data || !data.market_data) {
@@ -147,9 +144,11 @@ export async function getTokenPrice(
       const collectedPlatforms: Record<string, string> = {};
       for (const platformId in platformsData) {
         // Ensure the address is a non-empty string before including it
-        if (Object.prototype.hasOwnProperty.call(platformsData, platformId) &&
-            typeof platformsData[platformId] === 'string' &&
-            platformsData[platformId].length > 0) {
+        if (
+          Object.prototype.hasOwnProperty.call(platformsData, platformId) &&
+          typeof platformsData[platformId] === 'string' &&
+          platformsData[platformId].length > 0
+        ) {
           collectedPlatforms[platformId] = platformsData[platformId];
         }
       }
@@ -175,23 +174,34 @@ export async function getTokenPrice(
       last_updated: lastUpdated ? new Date(lastUpdated).toISOString() : undefined,
 
       // Extract other market data fields safely
-      price_change_percentage_24h: marketData.price_change_percentage_24h_in_currency?.[currency.toLowerCase()],
-      price_change_percentage_7d: marketData.price_change_percentage_7d_in_currency?.[currency.toLowerCase()],
-      price_change_percentage_14d: marketData.price_change_percentage_14d_in_currency?.[currency.toLowerCase()],
-      price_change_percentage_30d: marketData.price_change_percentage_30d_in_currency?.[currency.toLowerCase()],
-      price_change_percentage_60d: marketData.price_change_percentage_60d_in_currency?.[currency.toLowerCase()],
-      price_change_percentage_200d: marketData.price_change_percentage_200d_in_currency?.[currency.toLowerCase()],
-      price_change_percentage_1y: marketData.price_change_percentage_1y_in_currency?.[currency.toLowerCase()],
+      price_change_percentage_24h:
+        marketData.price_change_percentage_24h_in_currency?.[currency.toLowerCase()],
+      price_change_percentage_7d:
+        marketData.price_change_percentage_7d_in_currency?.[currency.toLowerCase()],
+      price_change_percentage_14d:
+        marketData.price_change_percentage_14d_in_currency?.[currency.toLowerCase()],
+      price_change_percentage_30d:
+        marketData.price_change_percentage_30d_in_currency?.[currency.toLowerCase()],
+      price_change_percentage_60d:
+        marketData.price_change_percentage_60d_in_currency?.[currency.toLowerCase()],
+      price_change_percentage_200d:
+        marketData.price_change_percentage_200d_in_currency?.[currency.toLowerCase()],
+      price_change_percentage_1y:
+        marketData.price_change_percentage_1y_in_currency?.[currency.toLowerCase()],
 
-      market_cap_change_percentage_24h: marketData.market_cap_change_percentage_24h_in_currency?.[currency.toLowerCase()],
+      market_cap_change_percentage_24h:
+        marketData.market_cap_change_percentage_24h_in_currency?.[currency.toLowerCase()],
     };
     // --- End Data Extraction ---
 
     return detailedInfo;
-
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Log more specific error if available
-    const errorMessage = error.response?.data?.error || error.message || error;
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : (error as { response?: { data?: { error?: string } } })?.response?.data?.error ||
+          String(error);
     console.error(`Error fetching detailed data for ${tokenId}:`, errorMessage);
     return null;
   }
@@ -202,9 +212,7 @@ export async function getTokenPrice(
  * @param tokenId The CoinGecko token ID
  * @returns Token contract information or null if not found
  */
-export async function getTokenContracts(
-  tokenId: string,
-): Promise<TokenContract | null> {
+export async function getTokenContracts(tokenId: string): Promise<TokenContract | null> {
   try {
     const config = getApiConfig();
     const response = await axios.get(`${config.baseURL}/coins/${tokenId}`, {
@@ -237,10 +245,7 @@ export async function getTokenContracts(
  * @param limit Maximum number of results (default: 10, max: 100)
  * @returns Array of search results
  */
-export async function searchTokens(
-  query: string,
-  limit: number = 10,
-): Promise<SearchResult[]> {
+export async function searchTokens(query: string, limit = 10): Promise<SearchResult[]> {
   try {
     const config = getApiConfig();
     const response = await axios.get(`${config.baseURL}/search`, {
@@ -253,12 +258,16 @@ export async function searchTokens(
     // Ensure limit is within bounds
     const validLimit = Math.min(Math.max(1, limit), 100);
 
-    return response.data.coins.slice(0, validLimit).map((coin: any) => ({
-      id: coin.id,
-      name: coin.name,
-      symbol: coin.symbol.toUpperCase(),
-      market_cap_rank: coin.market_cap_rank,
-    }));
+    return response.data.coins
+      .slice(0, validLimit)
+      .map(
+        (coin: { id: string; name: string; symbol: string; market_cap_rank: number | null }) => ({
+          id: coin.id,
+          name: coin.name,
+          symbol: coin.symbol.toUpperCase(),
+          market_cap_rank: coin.market_cap_rank,
+        }),
+      );
   } catch (error) {
     console.error(`Error searching for ${query}:`, error);
     return [];
@@ -270,17 +279,12 @@ export async function searchTokens(
  * @param limit Maximum number of results (default: 10)
  * @returns Array of trending tokens
  */
-export async function getTrendingTokens(
-  limit: number = 10,
-): Promise<SearchResult[]> {
+export async function getTrendingTokens(limit = 10): Promise<SearchResult[]> {
   try {
     const config = getApiConfig();
-    const response = await axios.get<TrendingResult>(
-      `${config.baseURL}/search/trending`,
-      {
-        headers: config.headers,
-      },
-    );
+    const response = await axios.get<TrendingResult>(`${config.baseURL}/search/trending`, {
+      headers: config.headers,
+    });
 
     // Ensure limit is within bounds
     const validLimit = Math.min(Math.max(1, limit), 10);
@@ -292,7 +296,7 @@ export async function getTrendingTokens(
       market_cap_rank: item.market_cap_rank,
     }));
   } catch (error) {
-    console.error("Error fetching trending tokens:", error);
+    console.error('Error fetching trending tokens:', error);
     return [];
   }
 }

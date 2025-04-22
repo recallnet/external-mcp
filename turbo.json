@@ -9,6 +9,9 @@
     "FONTS_REPO_ACCESS_TOKEN"
   ],
   "tasks": {
+    "@recallnet/mcp-types#build": {
+      "outputs": ["dist/**"]
+    },
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],

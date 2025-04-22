@@ -19,14 +19,14 @@ COINGECKO_API_KEY=your_coingecko_api_key
 ## Usage
 
 ```javascript
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 
-import { createCoinGeckoServer } from "@recallnet/external-mcp/coingecko";
+import { createCoinGeckoServer } from '@recallnet/external-mcp/coingecko';
 
 // Create server with options
 const coingeckoServer = createCoinGeckoServer({
-  name: "my-coingecko-server",
-  version: "1.0.0",
+  name: 'my-coingecko-server',
+  version: '1.0.0',
   includeAllTools: true,
   includeBasicTools: true,
   includeAdvancedTools: true,
@@ -35,7 +35,7 @@ const coingeckoServer = createCoinGeckoServer({
 // Connect with stdio transport
 const transport = new StdioServerTransport();
 coingeckoServer.server.connect(transport).then(() => {
-  console.log("CoinGecko MCP server started");
+  console.log('CoinGecko MCP server started');
 });
 ```
 
@@ -55,9 +55,9 @@ Gets the current price of a cryptocurrency token.
 **Example:**
 
 ```javascript
-const result = await client.invoke("coingecko-get-price", {
-  tokenId: "bitcoin",
-  currency: "usd",
+const result = await client.invoke('coingecko-get-price', {
+  tokenId: 'bitcoin',
+  currency: 'usd',
 });
 ```
 
@@ -73,8 +73,8 @@ Searches for cryptocurrency tokens by name or symbol.
 **Example:**
 
 ```javascript
-const result = await client.invoke("coingecko-search", {
-  query: "sol",
+const result = await client.invoke('coingecko-search', {
+  query: 'sol',
   limit: 5,
 });
 ```
@@ -92,8 +92,8 @@ Gets contract addresses for a cryptocurrency token across different blockchains.
 **Example:**
 
 ```javascript
-const result = await client.invoke("coingecko-get-contracts", {
-  tokenId: "uniswap",
+const result = await client.invoke('coingecko-get-contracts', {
+  tokenId: 'uniswap',
 });
 ```
 
@@ -108,7 +108,7 @@ Gets the currently trending cryptocurrencies on CoinGecko.
 **Example:**
 
 ```javascript
-const result = await client.invoke("coingecko-trending", {
+const result = await client.invoke('coingecko-trending', {
   limit: 5,
 });
 ```
@@ -126,7 +126,7 @@ Gets information about available CoinGecko API features based on your configurat
 **Example:**
 
 ```javascript
-const result = await client.invoke("coingecko-get-features", {});
+const result = await client.invoke('coingecko-get-features', {});
 ```
 
 ## Response Format
@@ -137,7 +137,7 @@ All tools return responses in a structured format:
 {
   content: [
     {
-      type: "text",
+      type: 'text',
       text: JSON.stringify(data, null, 2),
     },
   ];
@@ -161,8 +161,8 @@ Errors are returned in a consistent format:
 {
   content: [
     {
-      type: "text",
-      text: "Error: API request failed with status 429 (Too Many Requests)",
+      type: 'text',
+      text: 'Error: API request failed with status 429 (Too Many Requests)',
     },
   ];
 }

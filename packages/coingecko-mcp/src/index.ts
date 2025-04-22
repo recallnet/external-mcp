@@ -1,5 +1,5 @@
 // Default export
-import { createCoinGeckoServer as createServer } from "./server.js";
+import { createCoinGeckoServer as createServer } from './server.js';
 
 /**
  * CoinGecko module for @recallnet/external-mcp
@@ -7,10 +7,10 @@ import { createCoinGeckoServer as createServer } from "./server.js";
  */
 
 // Export everything from the client module
-export * from "./client.js";
+export * from './client.js';
 
 // Export server functionality
-export { createCoinGeckoServer } from "./server.js";
-export type { CoinGeckoServerOptions } from "./server.js";
+export { createCoinGeckoServer } from './server.js';
+export type { CoinGeckoServerOptions } from './server.js';
 
 export default createServer;

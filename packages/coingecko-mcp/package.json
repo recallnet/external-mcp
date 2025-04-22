@@ -7,7 +7,7 @@
   "bin": "./dist/server.js",
   "scripts": {
     "build": "tsc && shx chmod +x dist/*.js",
-    "prepare": "npm run build",
+    "prepare": "pnpm build",
     "test": "NODE_ENV=test node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --config=../../jest.config.js --testPathPattern=packages/coingecko-mcp",
     "start": "node dist/server.js",
     "dev": "ts-node src/server.ts",

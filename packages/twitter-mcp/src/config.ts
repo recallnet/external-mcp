@@ -1,5 +1,5 @@
-import chalk from "chalk";
-import * as dotenv from "dotenv";
+import chalk from 'chalk';
+import * as dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config();
@@ -19,12 +19,11 @@ interface Config {
 
 // Custom logger implementation
 export const logger = {
-  error: (...args: any[]) =>
-    process.stderr.write(`${chalk.red("[ERROR]")} ${args.join(" ")}\n`),
-  warn: (...args: any[]) =>
-    process.stderr.write(`${chalk.yellow("[WARN]")} ${args.join(" ")}\n`),
-  info: (...args: any[]) =>
-    process.stderr.write(`${chalk.blue("[INFO]")} ${args.join(" ")}\n`),
+  error: (...args: unknown[]) =>
+    process.stderr.write(`${chalk.red('[ERROR]')} ${args.join(' ')}\n`),
+  warn: (...args: unknown[]) =>
+    process.stderr.write(`${chalk.yellow('[WARN]')} ${args.join(' ')}\n`),
+  info: (...args: unknown[]) => process.stderr.write(`${chalk.blue('[INFO]')} ${args.join(' ')}\n`),
 };
 
 // Export configuration object
@@ -37,35 +36,29 @@ export const config: Config = {
   TWITTER_ACCESS_TOKEN: process.env.TWITTER_ACCESS_TOKEN,
   TWITTER_ACCESS_TOKEN_SECRET: process.env.TWITTER_ACCESS_TOKEN_SECRET,
   PROXY_URL: process.env.PROXY_URL,
-  DEBUG: process.env.DEBUG === "true",
+  DEBUG: process.env.DEBUG === 'true',
 };
 
 // Validate environment
 export function validateEnv(): void {
-  const requiredVars: (keyof Config)[] = [
-    "TWITTER_USERNAME",
-    "TWITTER_PASSWORD",
-    "TWITTER_EMAIL",
-  ];
+  const requiredVars: (keyof Config)[] = ['TWITTER_USERNAME', 'TWITTER_PASSWORD', 'TWITTER_EMAIL'];
 
-  const recommendedVars: (keyof Config)[] = ["PROXY_URL", "DEBUG"];
+  const recommendedVars: (keyof Config)[] = ['PROXY_URL', 'DEBUG'];
 
   const missingRequired = requiredVars.filter((v) => !config[v]);
   if (missingRequired.length > 0) {
     logger.error(
-      `Missing required variables: ${missingRequired.join(", ")}. Some functionality may not work.`,
+      `Missing required variables: ${missingRequired.join(', ')}. Some functionality may not work.`,
     );
   }
 
   const missingRecommended = recommendedVars.filter((v) => !config[v]);
   if (missingRecommended.length > 0) {
-    logger.warn(
-      `Missing recommended variables: ${missingRecommended.join(", ")}. Using defaults.`,
-    );
+    logger.warn(`Missing recommended variables: ${missingRecommended.join(', ')}. Using defaults.`);
   }
 }
 
 // Debug startup message
 if (config.DEBUG) {
-  logger.info("Starting Twitter MCP with debug mode enabled");
+  logger.info('Starting Twitter MCP with debug mode enabled');
 }

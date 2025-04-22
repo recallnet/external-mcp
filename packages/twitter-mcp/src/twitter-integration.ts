@@ -1,6 +1,13 @@
-import { Profile, Scraper, SearchMode, Tweet } from "agent-twitter-client";
+import { type Profile, Scraper, SearchMode, type Tweet } from 'agent-twitter-client';
 
-import { config, logger } from "./config.js";
+import { config, logger } from './config.js';
+
+/**
+ * Interface for tweet response with nested tweets property
+ */
+interface TweetResponse {
+  tweets: Tweet[];
+}
 
 /**
  * TwitterIntegration class handles interactions with the Twitter API.
@@ -34,7 +41,7 @@ export class TwitterIntegration {
    */
   async initialize(): Promise<void> {
     if (this.isInitialized) {
-      logger.info("Twitter client already initialized.");
+      logger.info('Twitter client already initialized.');
       return;
     }
 
@@ -43,14 +50,12 @@ export class TwitterIntegration {
       this.scraper = new Scraper();
 
       // Get credentials securely
-      logger.info("Retrieving Twitter credentials...");
+      logger.info('Retrieving Twitter credentials...');
       const credentials = config;
-      logger.info(
-        `Retrieved credentials for user: ${credentials.TWITTER_USERNAME}`,
-      );
+      logger.info(`Retrieved credentials for user: ${credentials.TWITTER_USERNAME}`);
 
       // Log in with credentials
-      logger.info("Logging in to Twitter...");
+      logger.info('Logging in to Twitter...');
 
       // If API v2 credentials are provided, use them for extended functionality
       if (
@@ -62,57 +67,55 @@ export class TwitterIntegration {
         // Check for required username when using API authentication
         if (!credentials.TWITTER_USERNAME) {
           logger.warn(
-            "No TWITTER_USERNAME provided for API authentication. This may cause issues with some operations.",
+            'No TWITTER_USERNAME provided for API authentication. This may cause issues with some operations.',
           );
         }
 
         try {
           await this.scraper.login(
-            credentials.TWITTER_USERNAME || "",
-            credentials.TWITTER_PASSWORD || "",
-            credentials.TWITTER_EMAIL || "",
+            credentials.TWITTER_USERNAME || '',
+            credentials.TWITTER_PASSWORD || '',
+            credentials.TWITTER_EMAIL || '',
             undefined, // twoFactorSecret
             credentials.TWITTER_API_KEY,
             credentials.TWITTER_API_SECRET_KEY,
             credentials.TWITTER_ACCESS_TOKEN,
             credentials.TWITTER_ACCESS_TOKEN_SECRET,
           );
-          logger.info(
-            "Successfully logged in to Twitter with API credentials.",
-          );
+          logger.info('Successfully logged in to Twitter with API credentials.');
         } catch (error) {
           logger.error(
             `API authentication failed: ${error instanceof Error ? error.message : String(error)}. Twitter auth occationally fails, you often just need to retry starting the server. `,
           );
-          throw new Error("Twitter API authentication failed. Twitter auth occationally fails, you often just need to retry starting the server.");
+          throw new Error(
+            'Twitter API authentication failed. Twitter auth occationally fails, you often just need to retry starting the server.',
+          );
         }
       } else {
         // For basic authentication, ensure we have the minimum required credentials
         if (!credentials.TWITTER_USERNAME) {
-          logger.error("TWITTER_USERNAME is required for authentication");
-          throw new Error("Twitter authentication failed: Missing username");
+          logger.error('TWITTER_USERNAME is required for authentication');
+          throw new Error('Twitter authentication failed: Missing username');
         }
 
         try {
           // Otherwise, just use basic authentication
           await this.scraper.login(
             credentials.TWITTER_USERNAME,
-            credentials.TWITTER_PASSWORD || "",
-            credentials.TWITTER_EMAIL || "",
+            credentials.TWITTER_PASSWORD || '',
+            credentials.TWITTER_EMAIL || '',
           );
-          logger.info(
-            "Successfully logged in to Twitter with basic credentials.",
-          );
+          logger.info('Successfully logged in to Twitter with basic credentials.');
         } catch (error) {
           logger.error(
             `Failed to log in to Twitter with basic credentials: ${error instanceof Error ? error.message : String(error)}`,
           );
-          throw new Error("Twitter basic authentication failed");
+          throw new Error('Twitter basic authentication failed');
         }
       }
 
       this.isInitialized = true;
-      logger.info("Twitter client initialized successfully.");
+      logger.info('Twitter client initialized successfully.');
     } catch (error) {
       logger.error(
         `Failed to initialize Twitter client: ${error instanceof Error ? error.message : String(error)}`,
@@ -138,7 +141,7 @@ export class TwitterIntegration {
       const isLoggedIn = await this.scraper.isLoggedIn();
 
       if (!isLoggedIn) {
-        logger.info("Twitter session expired, re-authenticating...");
+        logger.info('Twitter session expired, re-authenticating...');
         await this.initialize();
       }
 
@@ -158,7 +161,7 @@ export class TwitterIntegration {
     await this.ensureAuthenticated();
 
     if (!this.scraper) {
-      throw new Error("Twitter client not initialized.");
+      throw new Error('Twitter client not initialized.');
     }
 
     try {
@@ -179,7 +182,7 @@ export class TwitterIntegration {
     await this.ensureAuthenticated();
 
     if (!this.scraper) {
-      throw new Error("Twitter client not initialized.");
+      throw new Error('Twitter client not initialized.');
     }
 
     try {
@@ -200,7 +203,7 @@ export class TwitterIntegration {
     await this.ensureAuthenticated();
 
     if (!this.scraper) {
-      throw new Error("Twitter client not initialized.");
+      throw new Error('Twitter client not initialized.');
     }
 
     try {
@@ -216,11 +219,11 @@ export class TwitterIntegration {
   /**
    * Get a Twitter list.
    */
-  async getListTweets(listId: string, count: number = 20): Promise<Tweet[]> {
+  async getListTweets(listId: string, count = 20): Promise<Tweet[]> {
     await this.ensureAuthenticated();
 
     if (!this.scraper) {
-      throw new Error("Twitter client not initialized.");
+      throw new Error('Twitter client not initialized.');
     }
 
     const tweetsResult = await this.scraper.fetchListTweets(listId, count);
@@ -229,9 +232,13 @@ export class TwitterIntegration {
     let finalTweets: Tweet[] = [];
     if (Array.isArray(tweetsResult)) {
       finalTweets = tweetsResult;
-    } else if (tweetsResult && typeof tweetsResult === 'object' && Array.isArray((tweetsResult as any).tweets)) {
+    } else if (
+      tweetsResult &&
+      typeof tweetsResult === 'object' &&
+      Array.isArray((tweetsResult as TweetResponse).tweets)
+    ) {
       // Handle cases where tweets are nested under a 'tweets' property
-      finalTweets = (tweetsResult as any).tweets;
+      finalTweets = (tweetsResult as TweetResponse).tweets;
     } else {
       // If the structure is unexpected or empty in a way we don't handle, log and THROW an error
       const errorMessage = `Unexpected response format or empty result from fetchListTweets for list ${listId}`;
@@ -242,7 +249,9 @@ export class TwitterIntegration {
 
     // Workaround: Truncate the results to the requested count as the library might not respect it
     if (finalTweets.length > count) {
-      logger.warn(`fetchListTweets returned ${finalTweets.length} tweets, exceeding the requested count of ${count}. Truncating.`);
+      logger.warn(
+        `fetchListTweets returned ${finalTweets.length} tweets, exceeding the requested count of ${count}. Truncating.`,
+      );
       return finalTweets.slice(0, count);
     }
 
@@ -252,11 +261,11 @@ export class TwitterIntegration {
   /**
    * Get tweets from a user.
    */
-  async getUserTweets(username: string, count: number = 20): Promise<Tweet[]> {
+  async getUserTweets(username: string, count = 20): Promise<Tweet[]> {
     await this.ensureAuthenticated();
 
     if (!this.scraper) {
-      throw new Error("Twitter client not initialized.");
+      throw new Error('Twitter client not initialized.');
     }
 
     try {
@@ -286,11 +295,11 @@ export class TwitterIntegration {
     text: string,
     mediaItems?: Array<{ data: Buffer; mediaType: string }>,
     inReplyToId?: string,
-  ): Promise<any> {
+  ): Promise<Response> {
     await this.ensureAuthenticated();
 
     if (!this.scraper) {
-      throw new Error("Twitter client not initialized.");
+      throw new Error('Twitter client not initialized.');
     }
 
     try {
@@ -310,11 +319,11 @@ export class TwitterIntegration {
   /**
    * Like a tweet.
    */
-  async likeTweet(tweetId: string): Promise<any> {
+  async likeTweet(tweetId: string): Promise<void> {
     await this.ensureAuthenticated();
 
     if (!this.scraper) {
-      throw new Error("Twitter client not initialized.");
+      throw new Error('Twitter client not initialized.');
     }
 
     try {
@@ -330,11 +339,11 @@ export class TwitterIntegration {
   /**
    * Retweet a tweet.
    */
-  async retweet(tweetId: string): Promise<any> {
+  async retweet(tweetId: string): Promise<void> {
     await this.ensureAuthenticated();
 
     if (!this.scraper) {
-      throw new Error("Twitter client not initialized.");
+      throw new Error('Twitter client not initialized.');
     }
 
     try {
@@ -352,21 +361,17 @@ export class TwitterIntegration {
    */
   async searchTweets(
     query: string,
-    count: number = 20,
+    count = 20,
     searchMode: SearchMode = SearchMode.Top,
   ): Promise<Tweet[]> {
     await this.ensureAuthenticated();
 
     if (!this.scraper) {
-      throw new Error("Twitter client not initialized.");
+      throw new Error('Twitter client not initialized.');
     }
 
     try {
-      const tweetGenerator = this.scraper.searchTweets(
-        query,
-        count,
-        searchMode,
-      );
+      const tweetGenerator = this.scraper.searchTweets(query, count, searchMode);
       const tweets: Tweet[] = [];
 
       // Consume the generator up to the count
@@ -387,11 +392,11 @@ export class TwitterIntegration {
   /**
    * Search for profiles.
    */
-  async searchProfiles(query: string, count: number = 20): Promise<Profile[]> {
+  async searchProfiles(query: string, count = 20): Promise<Profile[]> {
     await this.ensureAuthenticated();
 
     if (!this.scraper) {
-      throw new Error("Twitter client not initialized.");
+      throw new Error('Twitter client not initialized.');
     }
 
     try {
@@ -416,11 +421,11 @@ export class TwitterIntegration {
   /**
    * Get followers of a user.
    */
-  async getFollowers(username: string, count: number = 20): Promise<Profile[]> {
+  async getFollowers(username: string, count = 20): Promise<Profile[]> {
     await this.ensureAuthenticated();
 
     if (!this.scraper) {
-      throw new Error("Twitter client not initialized.");
+      throw new Error('Twitter client not initialized.');
     }
 
     try {
@@ -431,10 +436,7 @@ export class TwitterIntegration {
         throw new Error(`Could not find user ID for ${username}`);
       }
 
-      const followerGenerator = this.scraper.getFollowers(
-        profile.userId,
-        count,
-      );
+      const followerGenerator = this.scraper.getFollowers(profile.userId, count);
       const followers: Profile[] = [];
 
       // Consume the generator up to the count
@@ -455,11 +457,11 @@ export class TwitterIntegration {
   /**
    * Get users that a user is following.
    */
-  async getFollowing(username: string, count: number = 20): Promise<Profile[]> {
+  async getFollowing(username: string, count = 20): Promise<Profile[]> {
     await this.ensureAuthenticated();
 
     if (!this.scraper) {
-      throw new Error("Twitter client not initialized.");
+      throw new Error('Twitter client not initialized.');
     }
 
     try {
@@ -470,10 +472,7 @@ export class TwitterIntegration {
         throw new Error(`Could not find user ID for ${username}`);
       }
 
-      const followingGenerator = this.scraper.getFollowing(
-        profile.userId,
-        count,
-      );
+      const followingGenerator = this.scraper.getFollowing(profile.userId, count);
       const following: Profile[] = [];
 
       // Consume the generator up to the count
@@ -494,11 +493,11 @@ export class TwitterIntegration {
   /**
    * Follow a user.
    */
-  async followUser(username: string): Promise<any> {
+  async followUser(username: string): Promise<void> {
     await this.ensureAuthenticated();
 
     if (!this.scraper) {
-      throw new Error("Twitter client not initialized.");
+      throw new Error('Twitter client not initialized.');
     }
 
     try {
@@ -518,7 +517,7 @@ export class TwitterIntegration {
     if (this.scraper) {
       try {
         await this.scraper.logout();
-        logger.info("Logged out of Twitter.");
+        logger.info('Logged out of Twitter.');
       } catch (error) {
         logger.error(
           `Error during logout: ${error instanceof Error ? error.message : String(error)}`,
@@ -538,7 +537,7 @@ export class TwitterIntegration {
     await this.ensureAuthenticated();
 
     if (!this.scraper) {
-      throw new Error("Twitter client not initialized.");
+      throw new Error('Twitter client not initialized.');
     }
 
     try {
@@ -563,7 +562,7 @@ export class TwitterIntegration {
     await this.ensureAuthenticated();
 
     if (!this.scraper) {
-      throw new Error("Twitter client not initialized.");
+      throw new Error('Twitter client not initialized.');
     }
 
     try {
@@ -585,7 +584,7 @@ export class TwitterIntegration {
     await this.ensureAuthenticated();
 
     if (!this.scraper) {
-      throw new Error("Twitter client not initialized.");
+      throw new Error('Twitter client not initialized.');
     }
 
     try {
@@ -603,14 +602,11 @@ export class TwitterIntegration {
    * Get conversation thread for a tweet.
    * Retrieves the parent tweet and all replies to a given tweet.
    */
-  async getConversationThread(
-    tweetId: string,
-    count: number = 20,
-  ): Promise<Tweet[]> {
+  async getConversationThread(tweetId: string, count = 20): Promise<Tweet[]> {
     await this.ensureAuthenticated();
 
     if (!this.scraper) {
-      throw new Error("Twitter client not initialized.");
+      throw new Error('Twitter client not initialized.');
     }
 
     try {
@@ -625,9 +621,7 @@ export class TwitterIntegration {
       // If it's a reply, get the parent tweet
       if (originalTweet.inReplyToStatusId) {
         try {
-          const parentTweet = await this.scraper.getTweet(
-            originalTweet.inReplyToStatusId,
-          );
+          const parentTweet = await this.scraper.getTweet(originalTweet.inReplyToStatusId);
           if (parentTweet) {
             thread.unshift(parentTweet); // Add parent at the beginning
           }
@@ -657,7 +651,7 @@ export class TwitterIntegration {
     await this.ensureAuthenticated();
 
     if (!this.scraper) {
-      throw new Error("Twitter client not initialized.");
+      throw new Error('Twitter client not initialized.');
     }
 
     try {
@@ -675,15 +669,12 @@ export class TwitterIntegration {
       const myProfile = await this.scraper.me();
 
       if (!myProfile || !myProfile.userId) {
-        throw new Error("Could not retrieve authenticated user profile");
+        throw new Error('Could not retrieve authenticated user profile');
       }
 
       // Get our following (limited to reasonable amount to check)
       const following: Profile[] = [];
-      const followingGenerator = this.scraper.getFollowing(
-        myProfile.userId,
-        100,
-      );
+      const followingGenerator = this.scraper.getFollowing(myProfile.userId, 100);
 
       for await (const followedUser of followingGenerator) {
         if (followedUser.userId === targetProfile.userId) {
@@ -713,38 +704,39 @@ export class TwitterIntegration {
   async uploadMedia(
     mediaData: Buffer | string,
     mediaType: string,
-  ): Promise<any> {
+  ): Promise<{
+    data: Buffer<ArrayBufferLike>;
+    mediaType: string;
+  }> {
     await this.ensureAuthenticated();
 
     if (!this.scraper) {
-      throw new Error("Twitter client not initialized.");
+      throw new Error('Twitter client not initialized.');
     }
 
     try {
       // Validate media type
-      const supportedImageTypes = ["image/jpeg", "image/png", "image/gif"];
-      const supportedVideoTypes = ["video/mp4"];
+      const supportedImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
+      const supportedVideoTypes = ['video/mp4'];
       const supportedTypes = [...supportedImageTypes, ...supportedVideoTypes];
 
       if (!supportedTypes.includes(mediaType)) {
         throw new Error(
-          `Unsupported media type: ${mediaType}. Supported types are: ${supportedTypes.join(", ")}`,
+          `Unsupported media type: ${mediaType}. Supported types are: ${supportedTypes.join(', ')}`,
         );
       }
 
       // If the mediaData is passed as a base64 string, convert it to a Buffer
       const buffer =
-        typeof mediaData === "string"
-          ? Buffer.from(mediaData.replace(/^data:.*?;base64,/, ""), "base64")
+        typeof mediaData === 'string'
+          ? Buffer.from(mediaData.replace(/^data:.*?;base64,/, ''), 'base64')
           : mediaData;
 
-      logger.info(
-        `Preparing media of type ${mediaType} (${buffer.length} bytes)`,
-      );
+      logger.info(`Preparing media of type ${mediaType} (${buffer.length} bytes)`);
 
       // If it's a video, validate file size (512MB max)
-      if (mediaType === "video/mp4" && buffer.length > 512 * 1024 * 1024) {
-        throw new Error("Video file size exceeds maximum limit of 512MB");
+      if (mediaType === 'video/mp4' && buffer.length > 512 * 1024 * 1024) {
+        throw new Error('Video file size exceeds maximum limit of 512MB');
       }
 
       // Instead of using a direct uploadMedia method (which doesn't exist),
@@ -774,11 +766,11 @@ export class TwitterIntegration {
     text: string,
     media: Array<{ data: string; mediaType: string }>,
     inReplyToId?: string,
-  ): Promise<any> {
+  ): Promise<Response> {
     await this.ensureAuthenticated();
 
     if (!this.scraper) {
-      throw new Error("Twitter client not initialized.");
+      throw new Error('Twitter client not initialized.');
     }
 
     try {
@@ -789,51 +781,40 @@ export class TwitterIntegration {
 
       // Count image and video items
       const imageItems = media.filter((item) =>
-        ["image/jpeg", "image/png", "image/gif"].includes(item.mediaType),
+        ['image/jpeg', 'image/png', 'image/gif'].includes(item.mediaType),
       );
 
-      const videoItems = media.filter((item) => item.mediaType === "video/mp4");
+      const videoItems = media.filter((item) => item.mediaType === 'video/mp4');
 
       // Validate counts
       if (imageItems.length > 0 && videoItems.length > 0) {
-        throw new Error("Cannot mix images and videos in the same tweet");
+        throw new Error('Cannot mix images and videos in the same tweet');
       }
 
       if (imageItems.length > 4) {
-        throw new Error("Maximum of 4 images per tweet allowed");
+        throw new Error('Maximum of 4 images per tweet allowed');
       }
 
       if (videoItems.length > 1) {
-        throw new Error("Maximum of 1 video per tweet allowed");
+        throw new Error('Maximum of 1 video per tweet allowed');
       }
 
       // Upload all media files
       const mediaItems = await Promise.all(
         media.map(async (item) => {
           // Validate media type
-          const supportedTypes = [
-            "image/jpeg",
-            "image/png",
-            "image/gif",
-            "video/mp4",
-          ];
+          const supportedTypes = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4'];
           if (!supportedTypes.includes(item.mediaType)) {
             throw new Error(
-              `Unsupported media type: ${item.mediaType}. Supported types are: ${supportedTypes.join(", ")}`,
+              `Unsupported media type: ${item.mediaType}. Supported types are: ${supportedTypes.join(', ')}`,
             );
           }
 
-          const buffer = Buffer.from(
-            item.data.replace(/^data:.*?;base64,/, ""),
-            "base64",
-          );
+          const buffer = Buffer.from(item.data.replace(/^data:.*?;base64,/, ''), 'base64');
 
           // If it's a video, validate file size (512MB max)
-          if (
-            item.mediaType === "video/mp4" &&
-            buffer.length > 512 * 1024 * 1024
-          ) {
-            throw new Error("Video file size exceeds maximum limit of 512MB");
+          if (item.mediaType === 'video/mp4' && buffer.length > 512 * 1024 * 1024) {
+            throw new Error('Video file size exceeds maximum limit of 512MB');
           }
 
           return { data: buffer, mediaType: item.mediaType };
@@ -841,7 +822,7 @@ export class TwitterIntegration {
       );
 
       logger.info(
-        `Sending tweet with ${mediaItems.length} media items: ${text.substring(0, 30)}${text.length > 30 ? "..." : ""}`,
+        `Sending tweet with ${mediaItems.length} media items: ${text.substring(0, 30)}${text.length > 30 ? '...' : ''}`,
       );
 
       return await this.sendTweet(text, mediaItems, inReplyToId);

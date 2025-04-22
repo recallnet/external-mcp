@@ -25,11 +25,11 @@ npm install @recallnet/external-mcp
 Each module can be used independently:
 
 ```javascript
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 
-import { createCoinGeckoServer } from "@recallnet/external-mcp/coingecko";
-import { createSubstackServer } from "@recallnet/external-mcp/substack";
-import { createTwitterServer } from "@recallnet/external-mcp/twitter";
+import { createCoinGeckoServer } from '@recallnet/external-mcp/coingecko';
+import { createSubstackServer } from '@recallnet/external-mcp/substack';
+import { createTwitterServer } from '@recallnet/external-mcp/twitter';
 
 // Create individual servers
 const twitterServer = createTwitterServer();
@@ -39,7 +39,7 @@ const coingeckoServer = createCoinGeckoServer();
 // Connect and start listening
 const transport = new StdioServerTransport();
 twitterServer.server.connect(transport).then(() => {
-  console.log("Twitter MCP server started");
+  console.log('Twitter MCP server started');
 });
 ```
 
@@ -51,8 +51,8 @@ Each module accepts configuration options:
 
 ```javascript
 const twitterServer = createTwitterServer({
-  name: "custom-twitter-server",
-  version: "1.0.0",
+  name: 'custom-twitter-server',
+  version: '1.0.0',
   includeAllTools: true,
   includeReadTools: true,
   includeWriteTools: false,
@@ -64,8 +64,8 @@ const twitterServer = createTwitterServer({
 
 ```javascript
 const substackServer = createSubstackServer({
-  name: "custom-substack-server",
-  version: "1.0.0",
+  name: 'custom-substack-server',
+  version: '1.0.0',
   includeAllTools: true,
 });
 ```
@@ -74,13 +74,14 @@ const substackServer = createSubstackServer({
 
 ```javascript
 const coingeckoServer = createCoinGeckoServer({
-  name: "custom-coingecko-server",
-  version: "1.0.0",
+  name: 'custom-coingecko-server',
+  version: '1.0.0',
   includeAllTools: true,
   includeBasicTools: true,
   includeAdvancedTools: false,
 });
 ```
+
 ## Available Tools
 
 ### Twitter Tools

@@ -27,17 +27,17 @@ TWITTER_EMAIL=your_twitter_email
 ### Basic setup
 
 ```javascript
-import dotenv from "dotenv";
+import dotenv from 'dotenv';
 
-import { createTwitterServer } from "@recallnet/external-mcp/twitter";
+import { createTwitterServer } from '@recallnet/external-mcp/twitter';
 
 // Load environment variables
 dotenv.config();
 
 // Create server
 const server = createTwitterServer({
-  name: "twitter-mcp-server",
-  version: "1.0.0",
+  name: 'twitter-mcp-server',
+  version: '1.0.0',
   includeReadTools: true, // Include read-only tools
   includeWriteTools: true, // Include write tools (tweet, like, follow)
 });
@@ -61,7 +61,7 @@ The Twitter client automatically detects available features based on your creden
 Check available features:
 
 ```javascript
-import { getAvailableFeatures } from "@recallnet/external-mcp/twitter";
+import { getAvailableFeatures } from '@recallnet/external-mcp/twitter';
 
 const features = getAvailableFeatures();
 console.log(features);

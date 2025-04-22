@@ -21,17 +21,17 @@ The Substack module doesn't require authentication for accessing public content.
 ### Basic setup
 
 ```javascript
-import dotenv from "dotenv";
+import dotenv from 'dotenv';
 
-import { createSubstackServer } from "@recallnet/external-mcp/substack";
+import { createSubstackServer } from '@recallnet/external-mcp/substack';
 
 // Load environment variables (not required for Substack, but good practice)
 dotenv.config();
 
 // Create server
 const server = createSubstackServer({
-  name: "substack-mcp-server",
-  version: "1.0.0",
+  name: 'substack-mcp-server',
+  version: '1.0.0',
   includeAllTools: true,
 });
 
@@ -48,9 +48,9 @@ Substack publications can be identified by:
 - Custom domain: `newsletter.example.com` (must be used as is)
 
 ```javascript
-import { normalizeSubstackId } from "@recallnet/external-mcp/substack";
+import { normalizeSubstackId } from '@recallnet/external-mcp/substack';
 
-const fullId = normalizeSubstackId("example"); // Returns 'example.substack.com'
+const fullId = normalizeSubstackId('example'); // Returns 'example.substack.com'
 ```
 
 ## Available Tools
@@ -69,13 +69,10 @@ const fullId = normalizeSubstackId("example"); // Returns 'example.substack.com'
 The Substack module includes utilities for processing HTML content into plain text:
 
 ```javascript
-import {
-  htmlToPlainText,
-  processPostContent,
-} from "@recallnet/external-mcp/utils";
+import { htmlToPlainText, processPostContent } from '@recallnet/external-mcp/utils';
 
 // Convert HTML to plain text
-const plainText = htmlToPlainText("<p>Hello <strong>world</strong>!</p>");
+const plainText = htmlToPlainText('<p>Hello <strong>world</strong>!</p>');
 
 // Process a Substack post object to add plain text content
 const processedPost = processPostContent(post);

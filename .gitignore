@@ -4,6 +4,7 @@ dist/
 .env.*
 !.env.example
 !.env.test
+.secrets
 
 # Dependencies
 node_modules

@@ -8,7 +8,7 @@
 export class ApiError extends Error {
   constructor(
     message: string,
-    public readonly code: string = "UNKNOWN_ERROR",
+    public readonly code: string = 'UNKNOWN_ERROR',
     public readonly statusCode?: number,
     public readonly originalError?: Error | unknown,
   ) {
@@ -36,7 +36,7 @@ export class ApiError extends Error {
  */
 export class NetworkError extends ApiError {
   constructor(message: string, originalError?: unknown) {
-    super(message, "NETWORK_ERROR", undefined, originalError);
+    super(message, 'NETWORK_ERROR', undefined, originalError);
     Object.setPrototypeOf(this, NetworkError.prototype);
   }
 }
@@ -46,7 +46,7 @@ export class NetworkError extends ApiError {
  */
 export class AuthenticationError extends ApiError {
   constructor(message: string, statusCode?: number, originalError?: unknown) {
-    super(message, "AUTHENTICATION_ERROR", statusCode, originalError);
+    super(message, 'AUTHENTICATION_ERROR', statusCode, originalError);
     Object.setPrototypeOf(this, AuthenticationError.prototype);
   }
 }
@@ -61,7 +61,7 @@ export class RateLimitError extends ApiError {
     statusCode?: number,
     originalError?: unknown,
   ) {
-    super(message, "RATE_LIMIT_ERROR", statusCode, originalError);
+    super(message, 'RATE_LIMIT_ERROR', statusCode, originalError);
     Object.setPrototypeOf(this, RateLimitError.prototype);
   }
 
@@ -81,7 +81,7 @@ export class RateLimitError extends ApiError {
  */
 export class NotFoundError extends ApiError {
   constructor(message: string, statusCode?: number, originalError?: unknown) {
-    super(message, "NOT_FOUND_ERROR", statusCode, originalError);
+    super(message, 'NOT_FOUND_ERROR', statusCode, originalError);
     Object.setPrototypeOf(this, NotFoundError.prototype);
   }
 }
@@ -96,7 +96,7 @@ export class ValidationError extends ApiError {
     statusCode?: number,
     originalError?: unknown,
   ) {
-    super(message, "VALIDATION_ERROR", statusCode, originalError);
+    super(message, 'VALIDATION_ERROR', statusCode, originalError);
     Object.setPrototypeOf(this, ValidationError.prototype);
   }
 
@@ -116,7 +116,7 @@ export class ValidationError extends ApiError {
  */
 export class UnsupportedError extends ApiError {
   constructor(message: string, originalError?: unknown) {
-    super(message, "UNSUPPORTED_ERROR", undefined, originalError);
+    super(message, 'UNSUPPORTED_ERROR', undefined, originalError);
     Object.setPrototypeOf(this, UnsupportedError.prototype);
   }
 }
@@ -127,7 +127,7 @@ interface AxiosErrorLike {
   message?: string;
   response?: {
     status?: number;
-    data?: any;
+    data?: unknown;
     headers?: Record<string, string>;
   };
 }
@@ -145,11 +145,11 @@ export function handleClientError(error: unknown, context: string): ApiError {
   }
 
   // Axios error handling
-  if (error && typeof error === "object" && "isAxiosError" in error) {
+  if (error && typeof error === 'object' && 'isAxiosError' in error) {
     const axiosError = error as AxiosErrorLike;
     const statusCode = axiosError.response?.status;
     const data = axiosError.response?.data;
-    const message = axiosError.message || "API request failed";
+    const message = axiosError.message || 'API request failed';
 
     // Handle common HTTP status codes
     if (statusCode) {
@@ -170,11 +170,8 @@ export function handleClientError(error: unknown, context: string): ApiError {
       }
 
       if (statusCode === 429) {
-        const resetTimestamp = axiosError.response?.headers?.[
-          "x-ratelimit-reset"
-        ]
-          ? parseInt(axiosError.response.headers["x-ratelimit-reset"], 10) *
-            1000
+        const resetTimestamp = axiosError.response?.headers?.['x-ratelimit-reset']
+          ? parseInt(axiosError.response.headers['x-ratelimit-reset'], 10) * 1000
           : undefined;
         return new RateLimitError(
           `Rate limit exceeded in ${context}: ${message}`,
@@ -185,7 +182,7 @@ export function handleClientError(error: unknown, context: string): ApiError {
       }
 
       if (statusCode >= 400 && statusCode < 500) {
-        if (data && typeof data === "object" && "errors" in data) {
+        if (data && typeof data === 'object' && 'errors' in data) {
           return new ValidationError(
             `Validation failed in ${context}: ${message}`,
             data.errors as Record<string, string[]>,
@@ -198,34 +195,18 @@ export function handleClientError(error: unknown, context: string): ApiError {
 
     // Network errors
     if (!axiosError.response) {
-      return new NetworkError(
-        `Network error in ${context}: ${message}`,
-        axiosError,
-      );
+      return new NetworkError(`Network error in ${context}: ${message}`, axiosError);
     }
 
     // Default error with status code if available
-    return new ApiError(
-      `API error in ${context}: ${message}`,
-      "API_ERROR",
-      statusCode,
-      axiosError,
-    );
+    return new ApiError(`API error in ${context}: ${message}`, 'API_ERROR', statusCode, axiosError);
   }
 
   // Standard Error objects
   if (error instanceof Error) {
-    return new ApiError(
-      `Error in ${context}: ${error.message}`,
-      "UNKNOWN_ERROR",
-      undefined,
-      error,
-    );
+    return new ApiError(`Error in ${context}: ${error.message}`, 'UNKNOWN_ERROR', undefined, error);
   }
 
   // Unknown errors
-  return new ApiError(
-    `Unknown error in ${context}: ${String(error)}`,
-    "UNKNOWN_ERROR",
-  );
+  return new ApiError(`Unknown error in ${context}: ${String(error)}`, 'UNKNOWN_ERROR');
 }

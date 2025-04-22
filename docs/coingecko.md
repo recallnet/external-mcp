@@ -25,17 +25,17 @@ COINGECKO_API_KEY=your_api_key
 ### Basic setup
 
 ```javascript
-import dotenv from "dotenv";
+import dotenv from 'dotenv';
 
-import { createCoinGeckoServer } from "@recallnet/external-mcp/coingecko";
+import { createCoinGeckoServer } from '@recallnet/external-mcp/coingecko';
 
 // Load environment variables
 dotenv.config();
 
 // Create server
 const server = createCoinGeckoServer({
-  name: "coingecko-mcp-server",
-  version: "1.0.0",
+  name: 'coingecko-mcp-server',
+  version: '1.0.0',
   includeAllTools: true, // Include all tools
   includeBasicTools: true, // Include basic tools only (get price, search)
   includeAdvancedTools: true, // Include advanced tools (contracts, trending)
@@ -50,7 +50,7 @@ await server.connect();
 The CoinGecko client automatically detects available features based on your configuration:
 
 ```javascript
-import { getAvailableFeatures } from "@recallnet/external-mcp/coingecko";
+import { getAvailableFeatures } from '@recallnet/external-mcp/coingecko';
 
 const features = getAvailableFeatures();
 console.log(features);

@@ -22,14 +22,14 @@ TWITTER_ACCESS_SECRET=your_twitter_access_secret
 ## Usage
 
 ```javascript
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 
-import { createTwitterServer } from "@recallnet/external-mcp/twitter";
+import { createTwitterServer } from '@recallnet/external-mcp/twitter';
 
 // Create server with options
 const twitterServer = createTwitterServer({
-  name: "my-twitter-server",
-  version: "1.0.0",
+  name: 'my-twitter-server',
+  version: '1.0.0',
   includeReadTools: true,
   includeWriteTools: true,
   includeGrokTools: false,
@@ -38,7 +38,7 @@ const twitterServer = createTwitterServer({
 // Connect with stdio transport
 const transport = new StdioServerTransport();
 twitterServer.server.connect(transport).then(() => {
-  console.log("Twitter MCP server started");
+  console.log('Twitter MCP server started');
 });
 ```
 
@@ -57,8 +57,8 @@ Gets detailed information about a Twitter user.
 **Example:**
 
 ```javascript
-const result = await client.invoke("twitter-get-user", {
-  username: "elonmusk",
+const result = await client.invoke('twitter-get-user', {
+  username: 'elonmusk',
 });
 ```
 
@@ -73,8 +73,8 @@ Gets details about a specific tweet.
 **Example:**
 
 ```javascript
-const result = await client.invoke("twitter-get-tweet", {
-  tweetId: "1580000000000000000",
+const result = await client.invoke('twitter-get-tweet', {
+  tweetId: '1580000000000000000',
 });
 ```
 
@@ -90,8 +90,8 @@ Searches for tweets containing specific terms.
 **Example:**
 
 ```javascript
-const result = await client.invoke("twitter-search-tweets", {
-  query: "artificial intelligence",
+const result = await client.invoke('twitter-search-tweets', {
+  query: 'artificial intelligence',
   count: 10,
 });
 ```
@@ -107,7 +107,7 @@ Gets current Twitter trends.
 **Example:**
 
 ```javascript
-const result = await client.invoke("twitter-get-trends", {});
+const result = await client.invoke('twitter-get-trends', {});
 ```
 
 #### twitter-get-followers
@@ -122,8 +122,8 @@ Gets followers for a user.
 **Example:**
 
 ```javascript
-const result = await client.invoke("twitter-get-followers", {
-  userId: "44196397",
+const result = await client.invoke('twitter-get-followers', {
+  userId: '44196397',
   count: 10,
 });
 ```
@@ -140,8 +140,8 @@ Gets accounts a user is following.
 **Example:**
 
 ```javascript
-const result = await client.invoke("twitter-get-following", {
-  userId: "44196397",
+const result = await client.invoke('twitter-get-following', {
+  userId: '44196397',
   count: 10,
 });
 ```
@@ -159,8 +159,8 @@ Sends a tweet with the provided text.
 **Example:**
 
 ```javascript
-const result = await client.invoke("twitter-send-tweet", {
-  text: "Hello, Twitter!",
+const result = await client.invoke('twitter-send-tweet', {
+  text: 'Hello, Twitter!',
 });
 ```
 
@@ -175,8 +175,8 @@ Likes a tweet.
 **Example:**
 
 ```javascript
-const result = await client.invoke("twitter-like-tweet", {
-  tweetId: "1580000000000000000",
+const result = await client.invoke('twitter-like-tweet', {
+  tweetId: '1580000000000000000',
 });
 ```
 
@@ -191,8 +191,8 @@ Retweets a tweet.
 **Example:**
 
 ```javascript
-const result = await client.invoke("twitter-retweet", {
-  tweetId: "1580000000000000000",
+const result = await client.invoke('twitter-retweet', {
+  tweetId: '1580000000000000000',
 });
 ```
 
@@ -207,8 +207,8 @@ Follows a Twitter user.
 **Example:**
 
 ```javascript
-const result = await client.invoke("twitter-follow-user", {
-  username: "elonmusk",
+const result = await client.invoke('twitter-follow-user', {
+  username: 'elonmusk',
 });
 ```
 
@@ -226,11 +226,11 @@ Sends a message to Grok AI and gets a response.
 **Example:**
 
 ```javascript
-const result = await client.invoke("twitter-grok-chat", {
+const result = await client.invoke('twitter-grok-chat', {
   message: "What's the latest news in AI?",
   history: [
-    { role: "user", content: "Hello Grok" },
-    { role: "assistant", content: "Hello! How can I help you today?" },
+    { role: 'user', content: 'Hello Grok' },
+    { role: 'assistant', content: 'Hello! How can I help you today?' },
   ],
 });
 ```
@@ -243,8 +243,8 @@ Errors are returned in a structured format:
 {
   content: [
     {
-      type: "text",
-      text: "Error message: Failed to retrieve tweet",
+      type: 'text',
+      text: 'Error message: Failed to retrieve tweet',
     },
   ];
 }

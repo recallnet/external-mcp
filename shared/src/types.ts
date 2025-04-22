@@ -47,11 +47,11 @@ export interface Tool {
   /** The parameters the tool accepts */
   parameters: {
     type?: string;
-    properties?: Record<string, any>;
+    properties?: Record<string, ToolPropertySchema>;
     required?: string[];
   };
   /** The function that handles the tool's execution */
-  handler: (params: any) => Promise<any>;
+  handler: (params: Record<string, unknown>) => Promise<unknown>;
 }
 
 /**
@@ -126,7 +126,7 @@ export interface Post {
   /** Source platform (twitter, substack, etc.) */
   source: string;
   /** Additional metadata specific to the source platform */
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -154,4 +154,16 @@ export interface Comment {
   likeCount?: number;
   /** Number of replies */
   replyCount?: number;
+}
+
+/**
+ * Type for tool property schema definition
+ */
+export interface ToolPropertySchema {
+  type?: string;
+  description?: string;
+  enum?: string[];
+  items?: ToolPropertySchema;
+  properties?: Record<string, ToolPropertySchema>;
+  required?: string[];
 }

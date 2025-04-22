@@ -9,36 +9,36 @@
  * @returns Plain text with preserved paragraph breaks
  */
 export function htmlToPlainText(html: string): string {
-  if (!html) return "";
+  if (!html) return '';
 
   // Replace common block elements with newlines
   let text = html
-    .replace(/<\/p>/gi, "\n\n")
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/div>/gi, "\n")
-    .replace(/<\/h[1-6]>/gi, "\n\n")
-    .replace(/<\/li>/gi, "\n")
-    .replace(/<\/tr>/gi, "\n");
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/div>/gi, '\n')
+    .replace(/<\/h[1-6]>/gi, '\n\n')
+    .replace(/<\/li>/gi, '\n')
+    .replace(/<\/tr>/gi, '\n');
 
   // Mark blockquotes for better formatting
-  text = text.replace(/<blockquote[^>]*>/gi, "\n\n> ");
-  text = text.replace(/<\/blockquote>/gi, "\n\n");
+  text = text.replace(/<blockquote[^>]*>/gi, '\n\n> ');
+  text = text.replace(/<\/blockquote>/gi, '\n\n');
 
   // Remove all remaining HTML tags
-  text = text.replace(/<[^>]*>/g, "");
+  text = text.replace(/<[^>]*>/g, '');
 
   // Decode HTML entities
   text = text
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'");
 
   // Normalize whitespace
   text = text
-    .replace(/\n{3,}/g, "\n\n") // Replace multiple newlines with just two
+    .replace(/\n{3,}/g, '\n\n') // Replace multiple newlines with just two
     .trim();
 
   return text;
@@ -50,19 +50,19 @@ export function htmlToPlainText(html: string): string {
  * @returns Simplified text with some structure preserved
  */
 export function extractStructuredContent(html: string): string {
-  if (!html) return "";
+  if (!html) return '';
 
   // Replace headings with markdown-style formatting
   let text = html
-    .replace(/<h1[^>]*>(.*?)<\/h1>/gi, "# $1\n\n")
-    .replace(/<h2[^>]*>(.*?)<\/h2>/gi, "## $1\n\n")
-    .replace(/<h3[^>]*>(.*?)<\/h3>/gi, "### $1\n\n")
-    .replace(/<h4[^>]*>(.*?)<\/h4>/gi, "#### $1\n\n")
-    .replace(/<h5[^>]*>(.*?)<\/h5>/gi, "##### $1\n\n")
-    .replace(/<h6[^>]*>(.*?)<\/h6>/gi, "###### $1\n\n");
+    .replace(/<h1[^>]*>(.*?)<\/h1>/gi, '# $1\n\n')
+    .replace(/<h2[^>]*>(.*?)<\/h2>/gi, '## $1\n\n')
+    .replace(/<h3[^>]*>(.*?)<\/h3>/gi, '### $1\n\n')
+    .replace(/<h4[^>]*>(.*?)<\/h4>/gi, '#### $1\n\n')
+    .replace(/<h5[^>]*>(.*?)<\/h5>/gi, '##### $1\n\n')
+    .replace(/<h6[^>]*>(.*?)<\/h6>/gi, '###### $1\n\n');
 
   // Handle lists
-  text = text.replace(/<li[^>]*>(.*?)<\/li>/gi, "• $1\n");
+  text = text.replace(/<li[^>]*>(.*?)<\/li>/gi, '• $1\n');
 
   // Convert the rest using htmlToPlainText
   return htmlToPlainText(text);
@@ -72,7 +72,7 @@ export function extractStructuredContent(html: string): string {
  * Interface representing a post with HTML content
  */
 export interface PostWithHtml {
-  [key: string]: any;
+  [key: string]: string | number | boolean | unknown | Record<string, unknown> | unknown[];
   body_html?: string;
   body_text?: string;
   truncated_body_text?: string;
@@ -95,9 +95,7 @@ export function processPostContent<T extends PostWithHtml>(post: T): T {
   }
 
   if (processedPost.truncated_body_text) {
-    processedPost.truncated_body_text = htmlToPlainText(
-      processedPost.truncated_body_text,
-    );
+    processedPost.truncated_body_text = htmlToPlainText(processedPost.truncated_body_text);
   }
 
   return processedPost;
@@ -119,22 +117,22 @@ export function processPostsContent<T extends PostWithHtml>(posts: T[]): T[] {
  * @returns The main content as plain text
  */
 export function extractMainContent(html: string): string {
-  if (!html) return "";
+  if (!html) return '';
 
   // Common content container selectors
   const contentSelectors = [
-    "article",
-    ".content",
-    ".article-content",
-    ".post-content",
-    ".entry-content",
-    "main",
-    "#content",
+    'article',
+    '.content',
+    '.article-content',
+    '.post-content',
+    '.entry-content',
+    'main',
+    '#content',
   ];
 
   // Simple regex-based approach for each potential content container
   for (const selector of contentSelectors) {
-    const regex = new RegExp(`<${selector}[^>]*>(.*?)<\/${selector}>`, "is");
+    const regex = new RegExp(`<${selector}[^>]*>(.*?)<\/${selector}>`, 'is');
     const match = html.match(regex);
     if (match && match[1]) {
       return htmlToPlainText(match[1]);
@@ -156,6 +154,6 @@ export function extractMainContent(html: string): string {
  * @returns Text-only content with no HTML
  */
 export function stripHtml(html: string): string {
-  if (!html) return "";
-  return html.replace(/<[^>]*>/g, "");
+  if (!html) return '';
+  return html.replace(/<[^>]*>/g, '');
 }

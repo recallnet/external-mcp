@@ -1,69 +1,69 @@
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 // Import the TwitterIntegration directly since it's what we need to test
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import * as path from "node:path";
-import { fileURLToPath } from "node:url";
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import type { Tool } from '@modelcontextprotocol/sdk/types.js';
 
-import { twitterTools } from "../tools/index.js";
-import { TwitterIntegration } from "../twitter-integration.js";
+import { twitterTools } from '../tools/index.js';
+import { TwitterIntegration } from '../twitter-integration.js';
 
 // Get the directory name of the current module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Basic test to verify the module structure
-describe("Twitter MCP - Basic Structure", () => {
-  describe("TwitterIntegration", () => {
-    it("should be a class with getInstance method", () => {
+describe('Twitter MCP - Basic Structure', () => {
+  describe('TwitterIntegration', () => {
+    it('should be a class with getInstance method', () => {
       expect(TwitterIntegration).toBeDefined();
-      expect(typeof TwitterIntegration.getInstance).toBe("function");
+      expect(typeof TwitterIntegration.getInstance).toBe('function');
     });
   });
 
-  describe("Twitter Tools Definitions", () => {
-    it("should export an array of tools with correct structure", () => {
+  describe('Twitter Tools Definitions', () => {
+    it('should export an array of tools with correct structure', () => {
       expect(Array.isArray(twitterTools)).toBe(true);
       expect(twitterTools.length).toBeGreaterThan(0); // Ensure there are tools
       if (twitterTools.length > 0) {
         const firstTool = twitterTools[0] as Tool;
-        expect(firstTool).toHaveProperty("name");
-        expect(firstTool).toHaveProperty("description");
-        expect(firstTool).toHaveProperty("inputSchema");
-        expect(typeof firstTool.name).toBe("string");
-        expect(typeof firstTool.description).toBe("string");
-        expect(typeof firstTool.inputSchema).toBe("object");
+        expect(firstTool).toHaveProperty('name');
+        expect(firstTool).toHaveProperty('description');
+        expect(firstTool).toHaveProperty('inputSchema');
+        expect(typeof firstTool.name).toBe('string');
+        expect(typeof firstTool.description).toBe('string');
+        expect(typeof firstTool.inputSchema).toBe('object');
       }
     });
   });
 });
 
-describe("Twitter MCP - Client-Server Interaction (Stdio)", () => {
+describe('Twitter MCP - Client-Server Interaction (Stdio)', () => {
   let client: Client | null = null;
   let transport: StdioClientTransport | null = null;
 
   beforeAll(async () => {
     // Point to the compiled server entry point
-    const serverPath = path.resolve(__dirname, "../../dist/index.js");
+    const serverPath = path.resolve(__dirname, '../../dist/index.js');
 
     transport = new StdioClientTransport({
-      command: "node",
+      command: 'node',
       args: [serverPath],
       // Optional: Add environment variables if needed for testing
       // env: { ...process.env, YOUR_TEST_VAR: 'value' }
     });
 
     client = new Client({
-      name: "test-client",
-      version: "1.0.0",
+      name: 'test-client',
+      version: '1.0.0',
     });
 
     // Connect the client
     // Add a timeout to handle potential connection issues
     await Promise.race([
       client.connect(transport),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Client connection timed out")), 10000), // 10 second timeout
+      new Promise(
+        (_, reject) => setTimeout(() => reject(new Error('Client connection timed out')), 10000), // 10 second timeout
       ),
     ]);
   });
@@ -76,9 +76,9 @@ describe("Twitter MCP - Client-Server Interaction (Stdio)", () => {
     transport = null; // Allow garbage collection
   });
 
-  it("should list the correct tools from the running server", async () => {
+  it('should list the correct tools from the running server', async () => {
     expect(client).not.toBeNull();
-    if (!client) throw new Error("Client not initialized"); // Type guard
+    if (!client) throw new Error('Client not initialized'); // Type guard
 
     const listedTools = await client.listTools();
 
@@ -94,7 +94,7 @@ describe("Twitter MCP - Client-Server Interaction (Stdio)", () => {
 
     // Optional: Deeper check - ensure structure matches for a sample tool
     if (listedTools.tools.length > 0 && twitterTools.length > 0) {
-      const firstListedTool = listedTools.tools.find(t => t.name === twitterTools[0].name);
+      const firstListedTool = listedTools.tools.find((t) => t.name === twitterTools[0].name);
       const firstExpectedTool = twitterTools[0];
       expect(firstListedTool).toBeDefined();
       expect(firstListedTool?.name).toEqual(firstExpectedTool.name);
@@ -104,15 +104,15 @@ describe("Twitter MCP - Client-Server Interaction (Stdio)", () => {
     }
   });
 
-  it("should get tweets from a specific list using getListTweets", async () => {
+  it('should get tweets from a specific list using getListTweets', async () => {
     expect(client).not.toBeNull();
-    if (!client) throw new Error("Client not initialized"); // Type guard
+    if (!client) throw new Error('Client not initialized'); // Type guard
 
-    const listId = "1913430764987048287";
+    const listId = '1913430764987048287';
     const count = 10;
 
     const result = await client.callTool({
-      name: "getListTweets",
+      name: 'getListTweets',
       arguments: {
         listId: listId,
         count: count,
@@ -122,9 +122,11 @@ describe("Twitter MCP - Client-Server Interaction (Stdio)", () => {
     // Check if the MCP call itself resulted in an error
     if (result.isError === true) {
       // Extract error details if possible
-      const errorDetails = Array.isArray(result.content) && (result.content[0] as any)?.type === 'text'
-        ? (result.content[0] as any).text
-        : JSON.stringify(result.content);
+      const errorDetails =
+        Array.isArray(result.content) &&
+        (result.content[0] as { type: string; text: string })?.type === 'text'
+          ? (result.content[0] as { type: string; text: string }).text
+          : JSON.stringify(result.content);
       throw new Error(`getListTweets MCP call failed with error: ${errorDetails}`);
     }
 
@@ -137,14 +139,14 @@ describe("Twitter MCP - Client-Server Interaction (Stdio)", () => {
     // We proceed only if there is content to parse
     if (contentArray.length > 0) {
       const firstContent = contentArray[0] as { type?: string; text?: string };
-      expect(firstContent?.type).toBe("text");
-      expect(typeof firstContent?.text).toBe("string");
+      expect(firstContent?.type).toBe('text');
+      expect(typeof firstContent?.text).toBe('string');
 
-      let tweets: any[] = [];
+      let tweets: Array<{ id: string; text: string; [key: string]: unknown }> = [];
       try {
-        tweets = JSON.parse(firstContent.text || "[]");
+        tweets = JSON.parse(firstContent.text || '[]');
       } catch (e) {
-        throw new Error("Failed to parse getListTweets response text as JSON");
+        throw new Error('Failed to parse getListTweets response text as JSON');
       }
 
       expect(Array.isArray(tweets)).toBe(true);
@@ -155,12 +157,14 @@ describe("Twitter MCP - Client-Server Interaction (Stdio)", () => {
 
       // Optional: Basic check on tweet structure if tweets are returned
       if (tweets.length > 0) {
-        expect(tweets[0]).toHaveProperty("id");
-        expect(tweets[0]).toHaveProperty("text");
+        expect(tweets[0]).toHaveProperty('id');
+        expect(tweets[0]).toHaveProperty('text');
       }
     } else {
       // Log if the array was empty, but don't fail the test for this reason
-      console.log(`getListTweets returned an empty content array for list ${listId}, potentially an empty list.`);
+      console.log(
+        `getListTweets returned an empty content array for list ${listId}, potentially an empty list.`,
+      );
     }
   });
 

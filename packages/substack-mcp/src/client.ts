@@ -1,10 +1,10 @@
-import axios, { AxiosError } from "axios";
-import * as cheerio from "cheerio";
+import axios, { AxiosError } from 'axios';
+import * as cheerio from 'cheerio';
 
-import { ApiError, handleClientError } from "@recallnet/mcp-types";
+import { ApiError, handleClientError } from '@recallnet/mcp-types';
 
 // Module name for error context
-const MODULE_NAME = "substack-client";
+const MODULE_NAME = 'substack-client';
 
 /**
  * Normalizes a Substack ID to ensure it's a full domain
@@ -13,7 +13,7 @@ const MODULE_NAME = "substack-client";
  */
 export function normalizeSubstackId(substackId: string): string {
   // If it already contains a dot, assume it's a full domain
-  if (substackId.includes(".")) {
+  if (substackId.includes('.')) {
     return substackId;
   }
 
@@ -203,6 +203,75 @@ export function getAvailableFeatures(): SubstackFeatures {
 }
 
 /**
+ * Raw API response category data
+ */
+interface RawCategoryData {
+  id: number;
+  name: string;
+}
+
+/**
+ * Raw API response post data
+ */
+interface RawPostData {
+  id: number;
+  slug: string;
+  title: string;
+  subtitle?: string;
+  post_date: string;
+  canonical_url?: string;
+}
+
+/**
+ * Raw API response comment data
+ */
+interface RawCommentData {
+  id: number;
+  body: string;
+  created_at: string;
+  user: {
+    name: string;
+    photo_url?: string;
+  };
+}
+
+/**
+ * Raw API response publication data
+ */
+interface RawPublicationData {
+  id: number;
+  name: string;
+  subdomain: string;
+  custom_domain: string | null;
+}
+
+/**
+ * Raw API response subscription data
+ */
+interface RawSubscriptionData {
+  publication_id: number;
+  publication_name: string;
+  domain: string;
+  membership_state: string;
+}
+
+/**
+ * Represents detailed information about a Substack publication
+ */
+interface PublicationInfo {
+  name: string;
+  domain: string;
+  description: string;
+  logoUrl: string;
+  twitterHandle: string | null;
+  about: string;
+  stats: {
+    recentPostCount: number;
+    lastPostDate: string | null;
+  };
+}
+
+/**
  * Gets posts from a Substack publication
  * @param substackId The Substack publication ID (subdomain or custom domain)
  * @param limit Maximum number of posts to retrieve (default: 10, max: 50)
@@ -212,8 +281,8 @@ export function getAvailableFeatures(): SubstackFeatures {
  */
 export async function getPosts(
   substackId: string,
-  limit: number = 10,
-  offset: number = 0,
+  limit = 10,
+  offset = 0,
 ): Promise<SubstackPost[]> {
   try {
     // Normalize the Substack ID
@@ -228,10 +297,10 @@ export async function getPosts(
     const response = await axios.get(url);
 
     // Map the response data to only include the fields we need
-    return response.data.map((post: any) => ({
+    return response.data.map((post: RawPostData) => ({
       slug: post.slug,
       title: post.title,
-      subtitle: post.subtitle || "",
+      subtitle: post.subtitle || '',
       post_date: post.post_date,
       url: post.canonical_url || `https://${normalizedId}/p/${post.slug}`,
       post_id: post.id,
@@ -251,8 +320,8 @@ export async function getPosts(
  */
 export async function getRecentPosts(
   substackId: string,
-  limit: number = 10,
-  offset: number = 0,
+  limit = 10,
+  offset = 0,
 ): Promise<SubstackPost[]> {
   try {
     // Normalize the Substack ID
@@ -267,10 +336,10 @@ export async function getRecentPosts(
     const response = await axios.get(url);
 
     // Map the response data to only include the fields we need
-    return response.data.map((post: any) => ({
+    return response.data.map((post: RawPostData) => ({
       slug: post.slug,
       title: post.title,
-      subtitle: post.subtitle || "",
+      subtitle: post.subtitle || '',
       post_date: post.post_date,
       url: post.canonical_url || `https://${normalizedId}/p/${post.slug}`,
       post_id: post.id,
@@ -287,10 +356,7 @@ export async function getRecentPosts(
  * @returns Array of comments
  * @throws {ApiError} If the API request fails
  */
-export async function getComments(
-  substackId: string,
-  postId: number,
-): Promise<PostComment[]> {
+export async function getComments(substackId: string, postId: number): Promise<PostComment[]> {
   try {
     // Normalize the Substack ID
     const normalizedId = normalizeSubstackId(substackId);
@@ -302,12 +368,12 @@ export async function getComments(
 
     // Extract and normalize comments data
     if (response.data && Array.isArray(response.data.comments)) {
-      return response.data.comments.map((comment: any) => ({
+      return response.data.comments.map((comment: RawCommentData) => ({
         id: comment.id,
         body: comment.body,
         created_at: comment.created_at,
         author: {
-          name: comment.user.name || "Anonymous",
+          name: comment.user.name || 'Anonymous',
           photo_url: comment.user.photo_url,
         },
       }));
@@ -339,35 +405,29 @@ export async function getPostBySlug(
 
     // Extract post ID for comments
     const idMatch = html.match(/"post_id":(\d+)/);
-    const postId = idMatch ? parseInt(idMatch[1], 10) : undefined;
+    const postId = idMatch ? Number.parseInt(idMatch[1], 10) : undefined;
 
     // Extract title
-    const titleMatch = html.match(
-      /<h1[^>]*class="[^"]*post-title[^"]*"[^>]*>(.*?)<\/h1>/i,
-    );
-    const title = titleMatch ? titleMatch[1].trim() : "";
+    const titleMatch = html.match(/<h1[^>]*class="[^"]*post-title[^"]*"[^>]*>(.*?)<\/h1>/i);
+    const title = titleMatch ? titleMatch[1].trim() : '';
 
     // Extract subtitle
-    const subtitleMatch = html.match(
-      /<h3[^>]*class="[^"]*subtitle[^"]*"[^>]*>(.*?)<\/h3>/i,
-    );
-    const subtitle = subtitleMatch ? subtitleMatch[1].trim() : "";
+    const subtitleMatch = html.match(/<h3[^>]*class="[^"]*subtitle[^"]*"[^>]*>(.*?)<\/h3>/i);
+    const subtitle = subtitleMatch ? subtitleMatch[1].trim() : '';
 
     // Extract author
-    const authorMatch = html.match(
-      /<a[^>]*class="[^"]*author-name[^"]*"[^>]*>(.*?)<\/a>/i,
-    );
-    const author = authorMatch ? authorMatch[1].trim() : "";
+    const authorMatch = html.match(/<a[^>]*class="[^"]*author-name[^"]*"[^>]*>(.*?)<\/a>/i);
+    const author = authorMatch ? authorMatch[1].trim() : '';
 
     // Extract date
     const dateMatch = html.match(/<time[^>]*>(.*?)<\/time>/i);
-    let post_date = "";
+    let post_date = '';
     if (dateMatch) {
       post_date = dateMatch[1].trim();
     } else {
       // Alternative date format
       const altDateMatch = html.match(/"datePublished":"([^"]*)"/);
-      post_date = altDateMatch ? altDateMatch[1] : "";
+      post_date = altDateMatch ? altDateMatch[1] : '';
     }
 
     // If we couldn't extract a title, the post probably doesn't exist
@@ -398,17 +458,17 @@ function extractPostId($: cheerio.CheerioAPI): number | undefined {
   // Try to find post ID in metadata
   const metaElement = $('meta[name="post-id"]');
   if (metaElement.length) {
-    const postId = metaElement.attr("content");
-    if (postId) return parseInt(postId, 10);
+    const postId = metaElement.attr('content');
+    if (postId) return Number.parseInt(postId, 10);
   }
 
   // Try to find post ID in script tags
-  const scripts = $("script");
+  const scripts = $('script');
   for (let i = 0; i < scripts.length; i++) {
-    const scriptContent = $(scripts[i]).html() || "";
+    const scriptContent = $(scripts[i]).html() || '';
     const postIdMatch = scriptContent.match(/"post_id"\s*:\s*(\d+)/);
     if (postIdMatch && postIdMatch[1]) {
-      return parseInt(postIdMatch[1], 10);
+      return Number.parseInt(postIdMatch[1], 10);
     }
   }
 
@@ -420,38 +480,26 @@ function extractPostId($: cheerio.CheerioAPI): number | undefined {
  * @param postUrl The full URL to the Substack post
  * @returns Detailed post information
  */
-export async function getPostContent(
-  postUrl: string,
-): Promise<SubstackPostDetails> {
+export async function getPostContent(postUrl: string): Promise<SubstackPostDetails> {
   try {
     const response = await fetch(postUrl);
     if (!response.ok) {
-      throw new Error(
-        `Failed to fetch post: ${response.status} ${response.statusText}`,
-      );
+      throw new Error(`Failed to fetch post: ${response.status} ${response.statusText}`);
     }
 
     const html = await response.text();
     const $ = cheerio.load(html);
 
-    const title = $("h1.post-title").text().trim();
-    const authorElement = $(".author-name");
-    const author = authorElement.length
-      ? authorElement.text().trim()
-      : undefined;
-    const dateElement = $(".post-date");
-    const publish_date = dateElement.length
-      ? dateElement.text().trim()
-      : undefined;
-    const subtitleElement = $(".subtitle");
-    const subtitle = subtitleElement.length
-      ? subtitleElement.text().trim()
-      : undefined;
+    const title = $('h1.post-title').text().trim();
+    const authorElement = $('.author-name');
+    const author = authorElement.length ? authorElement.text().trim() : undefined;
+    const dateElement = $('.post-date');
+    const publish_date = dateElement.length ? dateElement.text().trim() : undefined;
+    const subtitleElement = $('.subtitle');
+    const subtitle = subtitleElement.length ? subtitleElement.text().trim() : undefined;
 
-    const contentElement = $(".available-content");
-    const content = contentElement.length
-      ? contentElement.html() || undefined
-      : undefined;
+    const contentElement = $('.available-content');
+    const content = contentElement.length ? contentElement.html() || undefined : undefined;
 
     const post_id = extractPostId($);
 
@@ -459,7 +507,7 @@ export async function getPostContent(
     const urlObj = new URL(postUrl);
     const domain = urlObj.hostname;
     const pathMatch = urlObj.pathname.match(/\/p\/([^\/]+)/);
-    const slug = pathMatch ? pathMatch[1] : "";
+    const slug = pathMatch ? pathMatch[1] : '';
 
     return {
       title,
@@ -488,8 +536,8 @@ export async function getPostContent(
 export async function searchPosts(
   substackId: string,
   searchTerm: string,
-  limit: number = 10,
-  offset: number = 0,
+  limit = 10,
+  offset = 0,
 ): Promise<SubstackPost[]> {
   try {
     // Normalize the Substack ID
@@ -509,8 +557,7 @@ export async function searchPosts(
     const term = searchTerm.toLowerCase();
     const matches = recentPosts.filter(
       (post) =>
-        post.title.toLowerCase().includes(term) ||
-        (post.subtitle && post.subtitle.toLowerCase().includes(term)),
+        post.title.toLowerCase().includes(term) || post.subtitle?.toLowerCase().includes(term),
     );
 
     // Apply pagination
@@ -521,7 +568,7 @@ export async function searchPosts(
     return matches.slice(startIndex, endIndex).map((post) => ({
       slug: post.slug,
       title: post.title,
-      subtitle: post.subtitle || "",
+      subtitle: post.subtitle || '',
       post_date: post.post_date,
       url: post.url,
       post_id: post.post_id,
@@ -536,9 +583,7 @@ export async function searchPosts(
  * @param substackId The Substack publication ID (subdomain or custom domain)
  * @returns Publication information
  */
-export async function getPublicationInfo(
-  substackId: string,
-): Promise<any | null> {
+export async function getPublicationInfo(substackId: string): Promise<PublicationInfo | null> {
   try {
     // Normalize the Substack ID
     const normalizedId = normalizeSubstackId(substackId);
@@ -552,25 +597,21 @@ export async function getPublicationInfo(
     const name = nameMatch ? nameMatch[1].trim() : normalizedId;
 
     // Extract description
-    const descriptionMatch = html.match(
-      /<meta\s+name="description"\s+content="([^"]*?)"/i,
-    );
-    const description = descriptionMatch ? descriptionMatch[1] : "";
+    const descriptionMatch = html.match(/<meta\s+name="description"\s+content="([^"]*?)"/i);
+    const description = descriptionMatch ? descriptionMatch[1] : '';
 
     // Extract logo
     const logoMatch = html.match(
       /<img[^>]*?class="[^"]*?publication-logo[^"]*?"[^>]*?src="([^"]*?)"/i,
     );
-    let logoUrl = logoMatch ? logoMatch[1] : "";
+    const logoUrl = logoMatch ? logoMatch[1] : '';
 
     // Extract twitter handle if available
-    const twitterMatch = html.match(
-      /<a[^>]*?href="https:\/\/twitter\.com\/([^"\/]*?)"/i,
-    );
-    const twitterHandle = twitterMatch ? twitterMatch[1] : null;
+    const twitterMatch = html.match(/<a[^>]*?href="https:\/\/twitter\.com\/([^"\/]*?)"/i);
+    const twitterHandle: string | null = twitterMatch ? twitterMatch[1] : null;
 
     // Extract about page content if available
-    let about = "";
+    let about = '';
     try {
       const aboutResponse = await axios.get(`https://${normalizedId}/about`);
       const aboutHtml = aboutResponse.data;
@@ -579,10 +620,10 @@ export async function getPublicationInfo(
       );
       about = aboutMatch
         ? aboutMatch[1]
-            .replace(/<[^>]*>/g, " ")
-            .replace(/\s+/g, " ")
+            .replace(/<[^>]*>/g, ' ')
+            .replace(/\s+/g, ' ')
             .trim()
-        : "";
+        : '';
     } catch (e) {
       // About page might not exist, that's ok
     }
@@ -590,7 +631,8 @@ export async function getPublicationInfo(
     // Get recent posts for stats
     const recentPosts = await getRecentPosts(normalizedId, 3);
     const postCount = recentPosts.length;
-    const lastPostDate = postCount > 0 ? recentPosts[0].post_date : null;
+    const lastPostDate: string | null =
+      postCount > 0 && recentPosts[0].post_date ? recentPosts[0].post_date : null;
 
     // Compile information
     return {
@@ -617,11 +659,11 @@ export async function getPublicationInfo(
 export async function listCategories(): Promise<CategoryInfo[]> {
   try {
     // This endpoint isn't publicly documented but can be found in network requests
-    const response = await axios.get("https://substack.com/api/v1/categories");
+    const response = await axios.get('https://substack.com/api/v1/categories');
 
     // If successful, return the categories
     if (response.data && Array.isArray(response.data)) {
-      return response.data.map((category: any) => ({
+      return response.data.map((category: RawCategoryData) => ({
         id: category.id,
         name: category.name,
       }));
@@ -642,8 +684,8 @@ export async function listCategories(): Promise<CategoryInfo[]> {
  */
 export async function getCategoryNewsletters(
   categoryId: number,
-  page: number = 0,
-  limit: number = 20,
+  page = 0,
+  limit = 20,
 ): Promise<NewsletterBasicInfo[]> {
   try {
     // This endpoint isn't publicly documented but can be found in network requests
@@ -653,7 +695,7 @@ export async function getCategoryNewsletters(
 
     // If successful, extract and return the newsletter info
     if (response.data && Array.isArray(response.data.publications)) {
-      return response.data.publications.map((pub: any) => ({
+      return response.data.publications.map((pub: RawPublicationData) => ({
         name: pub.name,
         domain: pub.custom_domain || `${pub.subdomain}.substack.com`,
         subdomain: pub.subdomain,
@@ -691,7 +733,7 @@ export async function getUserProfile(username: string): Promise<UserProfile> {
         photo_url: userData.photo_url,
         profile_set_up_at: userData.profile_set_up_at,
         subscriptions: userData.subscriptions
-          ? userData.subscriptions.map((sub: any) => ({
+          ? userData.subscriptions.map((sub: RawSubscriptionData) => ({
               publication_id: sub.publication_id,
               publication_name: sub.publication_name,
               domain: sub.domain,
@@ -701,7 +743,7 @@ export async function getUserProfile(username: string): Promise<UserProfile> {
       };
     }
 
-    throw new Error("User profile data not found");
+    throw new Error('User profile data not found');
   } catch (error) {
     throw handleClientError(error, `${MODULE_NAME}.getUserProfile`);
   }
@@ -712,9 +754,7 @@ export async function getUserProfile(username: string): Promise<UserProfile> {
  * @param substackId The Substack publication ID (subdomain or custom domain)
  * @returns Array of authors
  */
-export async function getNewsletterAuthors(
-  substackId: string,
-): Promise<AuthorInfo[]> {
+export async function getNewsletterAuthors(substackId: string): Promise<AuthorInfo[]> {
   try {
     // Normalize the Substack ID
     const normalizedId = normalizeSubstackId(substackId);
@@ -736,15 +776,13 @@ export async function getNewsletterAuthors(
 
       if (authorDivs && authorDivs.length > 0) {
         return authorDivs.map((div: string, index: number) => {
-          const nameMatch = div.match(
-            /<div[^>]*?class="[^"]*?name[^"]*?"[^>]*?>(.*?)<\/div>/i,
-          );
+          const nameMatch = div.match(/<div[^>]*?class="[^"]*?name[^"]*?"[^>]*?>(.*?)<\/div>/i);
           const photoMatch = div.match(/<img[^>]*?src="([^"]*?)"/i);
 
           return {
             id: index + 1, // Since we don't have actual IDs from the HTML
             name: nameMatch ? nameMatch[1].trim() : `Author ${index + 1}`,
-            handle: "", // We can't reliably get this from the HTML
+            handle: '', // We can't reliably get this from the HTML
             photo_url: photoMatch ? photoMatch[1] : null,
           };
         });
@@ -757,7 +795,7 @@ export async function getNewsletterAuthors(
       {
         id: 1,
         name: publicationInfo?.name || normalizedId,
-        handle: normalizedId.replace(".substack.com", ""),
+        handle: normalizedId.replace('.substack.com', ''),
       },
     ];
   } catch (error) {
@@ -796,7 +834,7 @@ export async function getNewsletterRecommendations(
           const domainMatch = div.match(/href="https:\/\/([^"]*?)"/i);
           const nameMatch = div.match(/>(.*?)<\/a>/i);
 
-          const domain = domainMatch ? domainMatch[1] : "";
+          const domain = domainMatch ? domainMatch[1] : '';
 
           return {
             name: nameMatch ? nameMatch[1].trim() : domain,
@@ -808,9 +846,6 @@ export async function getNewsletterRecommendations(
 
     return [];
   } catch (error) {
-    throw handleClientError(
-      error,
-      `${MODULE_NAME}.getNewsletterRecommendations`,
-    );
+    throw handleClientError(error, `${MODULE_NAME}.getNewsletterRecommendations`);
   }
 }

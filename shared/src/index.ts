@@ -5,17 +5,17 @@
 
 // Version information
 export const utils = {
-  version: "1.0.0",
+  version: '1.0.0',
 };
 
 // Export error handling utilities
-export * from "./errors.js";
+export * from './errors.js';
 
 // Export HTML processing utilities
-export * from "./html.js";
+export * from './html.js';
 
 // Export shared type definitions
-export * from "./types.js";
+export * from './types.js';
 
 /**
  * Common types used across modules

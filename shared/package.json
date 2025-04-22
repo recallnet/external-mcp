@@ -1,21 +1,23 @@
 {
-    "name": "@recallnet/mcp-types",
-    "version": "1.0.0",
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts",
-    "type": "module",
-    "files": [
-      "dist"
-    ],
-    "scripts": {
-      "build": "tsc",
-      "test": "NODE_ENV=test node --experimental-vm-modules ../node_modules/jest/bin/jest.js --config=../jest.config.js --testPathPattern=shared"
-    },
-    "devDependencies": {
-      "typescript": "^5.7.3",
-      "@types/jest": "^29.5.11"
-    },
-    "peerDependencies": {
-      "@modelcontextprotocol/sdk": "^1.8.0"
-    }
+  "name": "@recallnet/mcp-types",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf .turbo node_modules dist",
+    "test": "NODE_ENV=test node --experimental-vm-modules ../node_modules/jest/bin/jest.js --config=../jest.config.js --testPathPattern=shared"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.11",
+    "@types/node": "^22.14.1",
+    "typescript": "^5.7.3"
+  },
+  "peerDependencies": {
+    "@modelcontextprotocol/sdk": "^1.8.0"
   }
+}
