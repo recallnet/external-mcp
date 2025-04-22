@@ -31,15 +31,6 @@ describe("CoinGecko Client", () => {
         proAccess: false,
       };
       expect(dummyFeatures).toBeInstanceOf(Object);
-
-      const dummyPrice: coingeckoClient.TokenPrice = {
-        id: "bitcoin",
-        symbol: "btc",
-        name: "Bitcoin",
-        current_price: 50000,
-        last_updated: new Date().toISOString(),
-      };
-      expect(dummyPrice).toBeInstanceOf(Object);
     });
   });
 });

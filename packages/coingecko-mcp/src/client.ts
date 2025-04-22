@@ -12,14 +12,6 @@ export interface CoinGeckoFeatures {
   proAccess: boolean;
 }
 
-export interface TokenPrice {
-  id: string;
-  symbol: string;
-  name: string;
-  current_price: number;
-  last_updated: string;
-}
-
 export interface TokenContract {
   id: string;
   symbol: string;
@@ -44,6 +36,36 @@ export interface TrendingResult {
       score: number;
     };
   }>;
+}
+
+// Define DetailedTokenInfo interface here or import if separate
+export interface DetailedTokenInfo {
+  id: string; // CoinGecko ID (e.g., 'bitcoin')
+  symbol: string; // Token symbol (e.g., 'btc')
+  name: string; // Token name (e.g., 'Bitcoin')
+
+  // Changed: Include all platforms and their addresses
+  platforms?: Record<string, string>; // Map platform ID (e.g., 'ethereum') to contract address
+
+  // Market Data (against the specified currency)
+  currency: string; // The currency for market data (e.g., 'usd')
+  price?: number;
+  last_updated?: string; // ISO 8601 format timestamp
+
+  price_change_percentage_24h?: number;
+  price_change_percentage_7d?: number;
+  price_change_percentage_14d?: number;
+  price_change_percentage_30d?: number;
+  price_change_percentage_60d?: number;
+  price_change_percentage_200d?: number;
+  price_change_percentage_1y?: number;
+
+  market_cap_change_percentage_24h?: number;
+
+  // Add other relevant fields from market_data as needed
+  // market_cap?: number;
+  // total_volume?: number;
+  // market_cap_rank?: number;
 }
 
 const BASE_URL = "https://api.coingecko.com/api/v3";
@@ -82,40 +104,95 @@ export function getAvailableFeatures(): CoinGeckoFeatures {
 }
 
 /**
- * Gets the current price for a token
- * @param tokenId The CoinGecko token ID (e.g., 'bitcoin')
- * @param currency The currency to get the price in (default: 'usd')
- * @returns Token price information or null if not found
+ * Fetches detailed token information, including price, market data, and platform/contract details.
+ * Uses the CoinGecko /coins/{id} endpoint.
+ *
+ * @param tokenId The CoinGecko ID of the token (e.g., 'bitcoin', 'uniswap').
+ * @param currency The currency to get market data against (default: 'usd').
+ * @returns Detailed token information or null if an error occurs.
  */
 export async function getTokenPrice(
   tokenId: string,
   currency: string = "usd",
-): Promise<TokenPrice | null> {
+): Promise<DetailedTokenInfo | null> {
   try {
-    const config = getApiConfig();
-    const response = await axios.get(`${config.baseURL}/simple/price`, {
-      headers: config.headers,
-      params: {
-        ids: tokenId,
-        vs_currencies: currency,
-        include_last_updated_at: true,
-      },
-    });
+    const config = getApiConfig(); // Assumes this provides baseURL and headers
+    const response = await axios.get(
+      `${config.baseURL}/coins/${tokenId}`,
+      {
+        headers: config.headers,
+        // Parameters to optimize the response size (optional, defaults might be okay)
+        params: {
+          localization: 'false', // Don't need localized descriptions
+          tickers: 'false',      // Don't need full ticker list here
+          market_data: 'true',   // Need market data
+          community_data: 'false',// Don't need community data
+          developer_data: 'false',// Don't need developer data
+          sparkline: 'false',    // Don't need sparkline
+        },
+      }
+    );
 
-    if (response.data[tokenId]) {
-      return {
-        id: tokenId,
-        symbol: tokenId, // Basic info only from this endpoint
-        name: tokenId,
-        current_price: response.data[tokenId][currency],
-        last_updated: new Date(
-          response.data[tokenId].last_updated_at * 1000,
-        ).toISOString(),
-      };
+    const data = response.data;
+    if (!data || !data.market_data) {
+      console.error(`Incomplete data received for ${tokenId}`);
+      return null;
     }
-    return null;
-  } catch (error) {
-    console.error(`Error fetching price for ${tokenId}:`, error);
+
+    // --- Platform Logic (Simpler) ---
+    let validPlatforms: Record<string, string> | undefined = undefined;
+    const platformsData = data.platforms;
+
+    if (platformsData && typeof platformsData === 'object') {
+      const collectedPlatforms: Record<string, string> = {};
+      for (const platformId in platformsData) {
+        // Ensure the address is a non-empty string before including it
+        if (Object.prototype.hasOwnProperty.call(platformsData, platformId) &&
+            typeof platformsData[platformId] === 'string' &&
+            platformsData[platformId].length > 0) {
+          collectedPlatforms[platformId] = platformsData[platformId];
+        }
+      }
+      // Only assign if we collected at least one valid platform
+      if (Object.keys(collectedPlatforms).length > 0) {
+        validPlatforms = collectedPlatforms;
+      }
+    }
+    // --- End Platform Logic ---
+
+    // --- Data Extraction ---
+    const marketData = data.market_data;
+    const price = marketData.current_price?.[currency.toLowerCase()];
+    const lastUpdated = marketData.last_updated;
+
+    const detailedInfo: DetailedTokenInfo = {
+      id: data.id,
+      symbol: data.symbol,
+      name: data.name,
+      platforms: validPlatforms, // Assign the collected platforms object
+      currency: currency,
+      price: typeof price === 'number' ? price : undefined,
+      last_updated: lastUpdated ? new Date(lastUpdated).toISOString() : undefined,
+
+      // Extract other market data fields safely
+      price_change_percentage_24h: marketData.price_change_percentage_24h_in_currency?.[currency.toLowerCase()],
+      price_change_percentage_7d: marketData.price_change_percentage_7d_in_currency?.[currency.toLowerCase()],
+      price_change_percentage_14d: marketData.price_change_percentage_14d_in_currency?.[currency.toLowerCase()],
+      price_change_percentage_30d: marketData.price_change_percentage_30d_in_currency?.[currency.toLowerCase()],
+      price_change_percentage_60d: marketData.price_change_percentage_60d_in_currency?.[currency.toLowerCase()],
+      price_change_percentage_200d: marketData.price_change_percentage_200d_in_currency?.[currency.toLowerCase()],
+      price_change_percentage_1y: marketData.price_change_percentage_1y_in_currency?.[currency.toLowerCase()],
+
+      market_cap_change_percentage_24h: marketData.market_cap_change_percentage_24h_in_currency?.[currency.toLowerCase()],
+    };
+    // --- End Data Extraction ---
+
+    return detailedInfo;
+
+  } catch (error: any) {
+    // Log more specific error if available
+    const errorMessage = error.response?.data?.error || error.message || error;
+    console.error(`Error fetching detailed data for ${tokenId}:`, errorMessage);
     return null;
   }
 }

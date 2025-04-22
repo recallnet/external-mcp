@@ -82,9 +82,9 @@ export class TwitterIntegration {
           );
         } catch (error) {
           logger.error(
-            `API authentication failed: ${error instanceof Error ? error.message : String(error)}`,
+            `API authentication failed: ${error instanceof Error ? error.message : String(error)}. Twitter auth occationally fails, you often just need to retry starting the server. `,
           );
-          throw new Error("Twitter API authentication failed");
+          throw new Error("Twitter API authentication failed. Twitter auth occationally fails, you often just need to retry starting the server.");
         }
       } else {
         // For basic authentication, ensure we have the minimum required credentials
@@ -211,6 +211,42 @@ export class TwitterIntegration {
       );
       return null;
     }
+  }
+
+  /**
+   * Get a Twitter list.
+   */
+  async getListTweets(listId: string, count: number = 20): Promise<Tweet[]> {
+    await this.ensureAuthenticated();
+
+    if (!this.scraper) {
+      throw new Error("Twitter client not initialized.");
+    }
+
+    const tweetsResult = await this.scraper.fetchListTweets(listId, count);
+
+    // Handle different possible return structures from the underlying library
+    let finalTweets: Tweet[] = [];
+    if (Array.isArray(tweetsResult)) {
+      finalTweets = tweetsResult;
+    } else if (tweetsResult && typeof tweetsResult === 'object' && Array.isArray((tweetsResult as any).tweets)) {
+      // Handle cases where tweets are nested under a 'tweets' property
+      finalTweets = (tweetsResult as any).tweets;
+    } else {
+      // If the structure is unexpected or empty in a way we don't handle, log and THROW an error
+      const errorMessage = `Unexpected response format or empty result from fetchListTweets for list ${listId}`;
+      logger.error(errorMessage, tweetsResult);
+      // Instead of returning [], throw an error to be caught by the main handler
+      throw new Error(errorMessage);
+    }
+
+    // Workaround: Truncate the results to the requested count as the library might not respect it
+    if (finalTweets.length > count) {
+      logger.warn(`fetchListTweets returned ${finalTweets.length} tweets, exceeding the requested count of ${count}. Truncating.`);
+      return finalTweets.slice(0, count);
+    }
+
+    return finalTweets;
   }
 
   /**

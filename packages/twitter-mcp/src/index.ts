@@ -265,6 +265,22 @@ const setRequestHandlerforToolRequestSchema = async (
           },
         ],
       };
+    } else if (toolName === "getListTweets") {
+      const listId = args.listId;
+      const count = args.count || 20;
+
+      logger.info(`Getting ${count} tweets from list with ID: ${listId}`);
+
+      const tweets = await twitter.getListTweets(listId, count);
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(tweets),
+          },
+        ],
+      };
     } else if (toolName === "getTweetText") {
       const tweetId = args.tweetId;
       logger.info(`Getting text for tweet with ID: ${tweetId}`);
@@ -675,7 +691,7 @@ async function runServer() {
     logger.info("Initializing Twitter integration...");
     await TwitterIntegration.getInstance().initialize();
 
-    // Connect transport
+    // Connect transport (Use Stdio)
     const transport = new StdioServerTransport();
     await server.connect(transport);
 

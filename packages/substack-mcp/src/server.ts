@@ -56,6 +56,10 @@ export function createSubstackServer(options: SubstackServerOptions = {}) {
         .number()
         .optional()
         .describe("Page number for pagination (default: 1)"),
+      postsPerPage: z
+        .number()
+        .optional()
+        .describe("Page number for pagination (default: 1)"),
     },
     async ({ substackId, page = 1 }, extra) => {
       try {
@@ -63,7 +67,7 @@ export function createSubstackServer(options: SubstackServerOptions = {}) {
         const validPage = Math.max(1, page);
 
         // Calculate offset based on page (10 items per page)
-        const postsPerPage = 10;
+        const postsPerPage =  Math.max(1, page);
         const offset = (validPage - 1) * postsPerPage;
 
         // Get posts with pagination
@@ -73,10 +77,10 @@ export function createSubstackServer(options: SubstackServerOptions = {}) {
           offset,
         );
 
-        // Get the total number of posts (for pagination info)
-        // We reuse the call but with a larger limit to estimate total
-        const allPosts = await client.getRecentPosts(substackId, 100, 0);
-        const total = allPosts.length;
+        // // Get the total number of posts (for pagination info)
+        // // We reuse the call but with a larger limit to estimate total
+        // const allPosts = await client.getRecentPosts(substackId, 100, 0);
+        // const total = allPosts.length;
 
         const result = {
           posts: posts.map((post) => ({
@@ -86,15 +90,15 @@ export function createSubstackServer(options: SubstackServerOptions = {}) {
             publishDate: post.post_date,
           })),
           page: validPage,
-          total,
-          hasMore: offset + posts.length < total,
+          total: 20,
+          hasMore: offset + posts.length < 20,
         };
 
         return {
           content: [
             {
               type: "text",
-              text: `Retrieved ${posts.length} recent posts from ${substackId} (page ${validPage} of ${Math.ceil(total / postsPerPage)})`,
+              text: `Retrieved ${posts.length} recent posts from ${substackId} (page ${validPage} of ${Math.ceil(20 / postsPerPage)})`,
             },
             {
               type: "text",
@@ -949,13 +953,13 @@ export const getContentBySlug: Tool = {
  */
 export const getContentLatest: Tool = {
   name: "getContentLatest",
-  description: "Get the latest post's content in plain text/markdown format",
+  description: "Get the latest content of only the most recent post from a substack as plain text or markdown format",
   parameters: {
     type: "object",
     properties: {
       substackId: {
         type: "string",
-        description: "The Substack publication ID (subdomain or full domain)",
+        description: "The Substack publication ID (subdomain or full domain). If you have a domain, the Id is like this https://{publication id}.substack.com.",
       },
       format: {
         type: "string",
