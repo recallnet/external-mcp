@@ -18,6 +18,47 @@ import {
 import * as client from "./client.js";
 import { normalizeSubstackId } from "./client.js";
 
+// First define a type utility at the top of the file below the imports
+type WithStringIndex<T> = T & { [key: string]: string };
+
+// Add this type definition near the top with the other utility types
+type ToolResult = {
+  error?: string;
+  title?: string;
+  subtitle?: string;
+  author?: string;
+  publishDate?: string;
+  wordCount?: number;
+  postId?: number;
+  url?: string;
+  domain?: string;
+  slug?: string;
+  imageUrl?: string;
+  content?: string;
+  posts?: Array<{
+    slug: string;
+    title: string;
+    description: string;
+    publishDate?: string;
+  }>;
+  page?: number;
+  total?: number;
+  hasMore?: boolean;
+  searchTerm?: string;
+  comments?: Array<{
+    id: number;
+    author: string;
+    date: string;
+    content: string;
+  }>;
+  count?: number;
+  name?: string;
+  description?: string;
+  logoUrl?: string;
+  stats?: Record<string, number>;
+  [key: string]: unknown;
+};
+
 /**
  * Options for creating a Substack MCP server
  */
@@ -134,7 +175,7 @@ export function createSubstackServer(options: SubstackServerOptions = {}) {
         };
       }
 
-      const processedPost = processPostContent(post);
+      const processedPost = processPostContent(post as WithStringIndex<typeof post>);
 
       return {
         content: [
@@ -340,13 +381,13 @@ export function createSubstackServer(options: SubstackServerOptions = {}) {
         }
 
         const posts = await client.getRecentPosts(id, 5);
-        const processedPosts = processPostsContent(posts);
+        const processedPosts = processPostsContent(posts as Array<WithStringIndex<typeof posts[0]>>);
 
         let postsMarkdown = "";
         if (processedPosts.length > 0) {
           postsMarkdown = "\n\n## Recent Posts\n\n";
           processedPosts.forEach((post) => {
-            postsMarkdown += `- [${post.title}](${post.canonical_url}) - ${new Date(post.post_date).toLocaleDateString()}\n`;
+            postsMarkdown += `- [${post.title}](${post.canonical_url}) - ${new Date(post.post_date as string).toLocaleDateString()}\n`;
           });
         }
 
@@ -394,14 +435,14 @@ export function createSubstackServer(options: SubstackServerOptions = {}) {
           substackId,
           slug,
           format,
-        });
+        }) as ToolResult;
 
         if (result.error) {
           return {
             content: [
               {
                 type: "text",
-                text: result.error,
+                text: String(result.error),
               },
             ],
           };
@@ -411,7 +452,7 @@ export function createSubstackServer(options: SubstackServerOptions = {}) {
           content: [
             {
               type: "text",
-              text: JSON.stringify(result, null, 2),
+              text: JSON.stringify(result, null, 2) as string,
             },
           ],
         };
@@ -436,14 +477,14 @@ export function createSubstackServer(options: SubstackServerOptions = {}) {
     },
     async ({ substackId, format = "plain" }, extra) => {
       try {
-        const result = await getContentLatest.handler({ substackId, format });
+        const result = await getContentLatest.handler({ substackId, format }) as ToolResult;
 
         if (result.error) {
           return {
             content: [
               {
                 type: "text",
-                text: result.error,
+                text: String(result.error),
               },
             ],
           };
@@ -453,7 +494,7 @@ export function createSubstackServer(options: SubstackServerOptions = {}) {
           content: [
             {
               type: "text",
-              text: JSON.stringify(result, null, 2),
+              text: JSON.stringify(result, null, 2) as string,
             },
           ],
         };
@@ -477,14 +518,14 @@ export function createSubstackServer(options: SubstackServerOptions = {}) {
     },
     async ({ substackId, slug }, extra) => {
       try {
-        const result = await getMetadataBySlug.handler({ substackId, slug });
+        const result = await getMetadataBySlug.handler({ substackId, slug }) as ToolResult;
 
         if (result.error) {
           return {
             content: [
               {
                 type: "text",
-                text: result.error,
+                text: String(result.error),
               },
             ],
           };
@@ -494,7 +535,7 @@ export function createSubstackServer(options: SubstackServerOptions = {}) {
           content: [
             {
               type: "text",
-              text: JSON.stringify(result, null, 2),
+              text: JSON.stringify(result, null, 2) as string,
             },
           ],
         };
@@ -517,14 +558,14 @@ export function createSubstackServer(options: SubstackServerOptions = {}) {
     },
     async ({ postUrl }, extra) => {
       try {
-        const result = await getPostMetadata.handler({ postUrl });
+        const result = await getPostMetadata.handler({ postUrl }) as ToolResult;
 
         if (result.error) {
           return {
             content: [
               {
                 type: "text",
-                text: result.error,
+                text: String(result.error),
               },
             ],
           };
@@ -534,7 +575,7 @@ export function createSubstackServer(options: SubstackServerOptions = {}) {
           content: [
             {
               type: "text",
-              text: JSON.stringify(result, null, 2),
+              text: JSON.stringify(result, null, 2) as string,
             },
           ],
         };
@@ -590,8 +631,10 @@ export const getPublicationInfo: Tool = {
     },
     required: ["substackId"],
   },
-  handler: async ({ substackId }: { substackId: string }) => {
+  handler: async (params: Record<string, unknown>) => {
     try {
+      const substackId = params.substackId as string;
+      
       // Get information about the publication
       const info = await client.getPublicationInfo(substackId);
 
@@ -631,8 +674,9 @@ export const getPostMetadata: Tool = {
     },
     required: ["postUrl"],
   },
-  handler: async ({ postUrl }: { postUrl: string }) => {
+  handler: async (params: Record<string, unknown>) => {
     try {
+      const postUrl = params.postUrl as string;
       const postDetails = await client.getPostContent(postUrl);
 
       return {
@@ -673,14 +717,11 @@ export const getPostComments: Tool = {
     },
     required: ["substackId", "postId"],
   },
-  handler: async ({
-    substackId,
-    postId,
-  }: {
-    substackId: string;
-    postId: number;
-  }) => {
+  handler: async (params: Record<string, unknown>) => {
     try {
+      const substackId = params.substackId as string;
+      const postId = params.postId as number;
+      
       const comments = await client.getComments(substackId, postId);
 
       return {
@@ -718,14 +759,11 @@ export const getRecentPosts: Tool = {
     },
     required: ["substackId"],
   },
-  handler: async ({
-    substackId,
-    page = 1,
-  }: {
-    substackId: string;
-    page?: number;
-  }) => {
+  handler: async (params: Record<string, unknown>) => {
     try {
+      const substackId = params.substackId as string;
+      const page = (params.page as number) ?? 1;
+      
       // Calculate offset based on page (each page has 10 items)
       const postsPerPage = 10;
       const offset = (Math.max(1, page) - 1) * postsPerPage;
@@ -784,16 +822,12 @@ export const searchPosts: Tool = {
     },
     required: ["substackId", "searchTerm"],
   },
-  handler: async ({
-    substackId,
-    searchTerm,
-    page = 1,
-  }: {
-    substackId: string;
-    searchTerm: string;
-    page?: number;
-  }) => {
+  handler: async (params: Record<string, unknown>) => {
     try {
+      const substackId = params.substackId as string;
+      const searchTerm = params.searchTerm as string;
+      const page = (params.page as number) ?? 1;
+      
       // Calculate offset based on page (each page has 10 items)
       const offset = (Math.max(1, page) - 1) * 10;
       // Always limit to 10 posts per page
@@ -845,14 +879,11 @@ export const getPostBySlug: Tool = {
     },
     required: ["substackId", "slug"],
   },
-  handler: async ({
-    substackId,
-    slug,
-  }: {
-    substackId: string;
-    slug: string;
-  }) => {
+  handler: async (params: Record<string, unknown>) => {
     try {
+      const substackId = params.substackId as string;
+      const slug = params.slug as string;
+      
       const post = await client.getPostBySlug(substackId, slug);
 
       if (!post) {
@@ -873,6 +904,9 @@ export const getPostBySlug: Tool = {
     }
   },
 };
+
+// Run the server
+runServer();
 
 /**
  * Tool to get post content by slug in plain text/markdown format
@@ -899,16 +933,12 @@ export const getContentBySlug: Tool = {
     },
     required: ["substackId", "slug"],
   },
-  handler: async ({
-    substackId,
-    slug,
-    format = "plain",
-  }: {
-    substackId: string;
-    slug: string;
-    format?: "plain" | "markdown";
-  }) => {
+  handler: async (params: Record<string, unknown>) => {
     try {
+      const substackId = params.substackId as string;
+      const slug = params.slug as string;
+      const format = (params.format as "plain" | "markdown") ?? "plain";
+      
       // Get the post by slug to verify it exists and get the URL
       const post = await client.getPostBySlug(substackId, slug);
 
@@ -969,14 +999,11 @@ export const getContentLatest: Tool = {
     },
     required: ["substackId"],
   },
-  handler: async ({
-    substackId,
-    format = "plain",
-  }: {
-    substackId: string;
-    format?: "plain" | "markdown";
-  }) => {
+  handler: async (params: Record<string, unknown>) => {
     try {
+      const substackId = params.substackId as string;
+      const format = (params.format as "plain" | "markdown") ?? "plain";
+      
       // Get the most recent post
       const recentPosts = await client.getRecentPosts(substackId, 1);
 
@@ -1040,14 +1067,11 @@ export const getMetadataBySlug: Tool = {
     },
     required: ["substackId", "slug"],
   },
-  handler: async ({
-    substackId,
-    slug,
-  }: {
-    substackId: string;
-    slug: string;
-  }) => {
+  handler: async (params: Record<string, unknown>) => {
     try {
+      const substackId = params.substackId as string;
+      const slug = params.slug as string;
+      
       // Get the post by slug to verify it exists and get basic info
       const post = await client.getPostBySlug(substackId, slug);
 
@@ -1090,15 +1114,15 @@ export const getMetadataBySlug: Tool = {
  * List of all Substack tools
  */
 export const substackTools = [
-  getPostMetadata,
-  getMetadataBySlug,
-  getPostComments,
   getPublicationInfo,
+  getPostComments,
   getRecentPosts,
   searchPosts,
   getPostBySlug,
+  getPostMetadata,
   getContentBySlug,
   getContentLatest,
+  getMetadataBySlug,
 ];
 
 async function runServer() {
@@ -1121,5 +1145,3 @@ async function runServer() {
   }
 }
 
-// Run the server
-runServer();

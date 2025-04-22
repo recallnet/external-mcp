@@ -20,24 +20,7 @@ npm install @recallnet/external-mcp
 
 ## Usage
 
-### Quick Start
-
-```javascript
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-
-import { createCombinedServer } from "@recallnet/external-mcp";
-
-// Create a server with all modules
-const server = createCombinedServer();
-const transport = new StdioServerTransport();
-
-// Connect and start listening
-server.connect(transport).then(() => {
-  console.log("MCP server started and listening");
-});
-```
-
-### Individual Modules
+## Individual Modules
 
 Each module can be used independently:
 
@@ -98,24 +81,6 @@ const coingeckoServer = createCoinGeckoServer({
   includeAdvancedTools: false,
 });
 ```
-
-### Combined Server Options
-
-```javascript
-const combinedServer = createCombinedServer({
-  name: "custom-combined-server",
-  version: "1.0.0",
-  modules: ["twitter", "substack"], // Include only twitter and substack
-  twitterOptions: {
-    includeReadTools: true,
-    includeWriteTools: false,
-  },
-  substackOptions: {
-    includeAllTools: true,
-  },
-});
-```
-
 ## Available Tools
 
 ### Twitter Tools
@@ -154,9 +119,6 @@ const combinedServer = createCombinedServer({
 You can start the servers directly from the command line:
 
 ```bash
-# Start all modules in a combined server
-npm run start
-
 # Start individual modules
 npm run start:twitter
 npm run start:substack

@@ -69,11 +69,21 @@ export function extractStructuredContent(html: string): string {
 }
 
 /**
+ * Interface representing a post with HTML content
+ */
+export interface PostWithHtml {
+  [key: string]: any;
+  body_html?: string;
+  body_text?: string;
+  truncated_body_text?: string;
+}
+
+/**
  * Processes a post object to convert HTML content to plain text
  * @param post Post object with potential HTML content
  * @returns Post with HTML content converted to plain text
  */
-export function processPostContent(post: any): any {
+export function processPostContent<T extends PostWithHtml>(post: T): T {
   if (!post) return post;
 
   const processedPost = { ...post };
@@ -98,7 +108,7 @@ export function processPostContent(post: any): any {
  * @param posts Array of post objects with potential HTML content
  * @returns Posts with HTML content converted to plain text
  */
-export function processPostsContent(posts: any[]): any[] {
+export function processPostsContent<T extends PostWithHtml>(posts: T[]): T[] {
   if (!posts || !Array.isArray(posts)) return posts;
   return posts.map((post) => processPostContent(post));
 }

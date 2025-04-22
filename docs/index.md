@@ -9,18 +9,11 @@ Welcome to the documentation for the @recallnet/external-mcp package. This libra
 
 ## Module Documentation
 
-Each module in this package can be used independently or combined into a single server:
+Each module in this package can be used independently:
 
 - [Twitter Module](./modules/twitter.md) - Access tweets, user profiles, trends, and perform Twitter actions
 - [Substack Module](./modules/substack.md) - Retrieve posts, publications, comments, and content from Substack
 - [CoinGecko Module](./modules/coingecko.md) - Get cryptocurrency prices, trends, and market data
-
-## Combined Server
-
-Learn how to use all modules together in a single server:
-
-- [Combined Server Setup](./combined-server.md)
-- [Configuration Options](./configuration.md)
 
 ## Guides
 
@@ -48,7 +41,6 @@ Learn how to use all modules together in a single server:
 - [Twitter Examples](./examples/twitter.md)
 - [Substack Examples](./examples/substack.md)
 - [CoinGecko Examples](./examples/coingecko.md)
-- [Combined Server Examples](./examples/combined.md)
 
 ## Resources
 
