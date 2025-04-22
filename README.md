@@ -1,246 +1,174 @@
-# Recall Data Omnifeeds
+# @recallnet/external-mcp
 
-A Model Context Protocol (MCP) server that provides access to various data feeds including Twitter, Substack, and CoinGecko. This server enables AI models to interact with and analyze data from multiple sources through a unified interface.
+A modular Model Context Protocol (MCP) library providing access to various external data feeds.
 
-## Features
+## Overview
 
-- **Twitter Integration**
-  - Get user profiles and tweets
-  - Search tweets and profiles
-  - Access trending topics
-  - Full write access (tweet, like, retweet, follow)
-  - Direct messaging support
-  - Grok chat integration
+This library serves as a collection of MCP servers and clients for accessing external data sources:
 
-- **Substack Integration**
-  - Get publication information
-  - Retrieve recent posts
-  - Access post comments
-  - Search posts
-  - Support for both custom domains and subdomains
+- **Twitter**: Access tweets, user profiles, trends, and more
+- **Substack**: Retrieve posts, publications, comments, and content
+- **CoinGecko**: Get cryptocurrency prices, trends, and market data
 
-- **CoinGecko Integration**
-  - Get current token prices
-  - Retrieve contract addresses and chains
-  - Search for tokens
-  - Get trending tokens
-  - Support for both free and Pro API access
-
-## Integrate with Claude
-
-1. Install and build the server:
-   ```bash
-   npm install
-   npm run build
-   ```
-
-2. In Claude, go to Settings -> Developer -> Add MCP endpoint
-
-3. Add the following configuration:
-   ```json
-   {
-     "mcpServers": {
-       "recall-data-omnifeeds": {
-         "command": "node",
-         "args": ["path to omnifeeds build they just created"],
-         "env": {
-           "PORT": "3008",
-           "TWITTER_USERNAME": "xx",
-           "TWITTER_PASSWORD": "xxx",
-           "TWITTER_EMAIL": "xxx",
-           "COINGECKO_API_KEY": "xxx" (optional)
-         }
-       }
-   }
-   ```
-
-4. Restart Claude
-
-5. Verify the integration:
-   - Look for a number next to a hammer icon in the bottom right of the prompt input
-   - Test the integration by asking:
-     ```
-     has anyone mentioned a cool coin lately on this list https://x.com/i/lists/1879866762147303588?
-     ```
+The library is designed with a modular approach, allowing you to use each module independently or combine them into a single MCP server.
 
 ## Installation
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/recall-data-omnifeeds.git
-   cd recall-data-omnifeeds
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Create a `.env` file with your API credentials:
-   ```
-   # Twitter credentials (if needed)
-   TWITTER_USERNAME=your_twitter_username
-   TWITTER_PASSWORD=your_twitter_password
-   TWITTER_EMAIL=your_twitter_email
-
-   # CoinGecko credentials (optional)
-   COINGECKO_API_KEY=your_api_key  # Optional: enables Pro API features
-   ```
-
-4. Build the project:
-   ```bash
-   npm run build
-   ```
-
-5. Start the server:
-   ```bash
-   npm start
-   ```
+```bash
+npm install @recallnet/external-mcp
+```
 
 ## Usage
 
-The server implements the Model Context Protocol (MCP) and can be used with any MCP-compatible client. Here are some example invocations:
+## Individual Modules
 
-### Twitter Examples
+Each module can be used independently:
 
 ```javascript
-// Get a user's profile
-const result = await server.invoke("twitter-get-profile", {
-  username: "example_user"
-});
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 
-// Get recent tweets
-const result = await server.invoke("twitter-get-tweets", {
-  username: "example_user",
-  count: 10
-});
+import { createCoinGeckoServer } from '@recallnet/external-mcp/coingecko';
+import { createSubstackServer } from '@recallnet/external-mcp/substack';
+import { createTwitterServer } from '@recallnet/external-mcp/twitter';
 
-// Search tweets
-const result = await server.invoke("twitter-search-tweets", {
-  query: "example search",
-  count: 20
+// Create individual servers
+const twitterServer = createTwitterServer();
+const substackServer = createSubstackServer();
+const coingeckoServer = createCoinGeckoServer();
+
+// Connect and start listening
+const transport = new StdioServerTransport();
+twitterServer.server.connect(transport).then(() => {
+  console.log('Twitter MCP server started');
 });
 ```
 
-### Substack Examples
+## Configuration
+
+Each module accepts configuration options:
+
+### Twitter Server Options
 
 ```javascript
-// Get publication info
-const result = await server.invoke("substack-get-publication-info", {
-  substackId: "example.substack.com"
-});
-
-// Get recent posts
-const result = await server.invoke("substack-get-recent-posts", {
-  substackId: "example.substack.com",
-  limit: 10
-});
-
-// Search posts
-const result = await server.invoke("substack-search-posts", {
-  substackId: "example.substack.com",
-  searchTerm: "example search",
-  limit: 10
+const twitterServer = createTwitterServer({
+  name: 'custom-twitter-server',
+  version: '1.0.0',
+  includeAllTools: true,
+  includeReadTools: true,
+  includeWriteTools: false,
+  includeGrokTools: false,
 });
 ```
 
-### CoinGecko Examples
+### Substack Server Options
 
 ```javascript
-// Get token price
-const result = await server.invoke("coingecko-get-price", {
-  tokenId: "bitcoin",
-  currency: "usd"
-});
-
-// Get contract addresses
-const result = await server.invoke("coingecko-get-contracts", {
-  tokenId: "usd-coin"
-});
-
-// Search tokens
-const result = await server.invoke("coingecko-search", {
-  query: "ethereum",
-  limit: 5
-});
-
-// Get trending tokens
-const result = await server.invoke("coingecko-trending", {
-  limit: 5
+const substackServer = createSubstackServer({
+  name: 'custom-substack-server',
+  version: '1.0.0',
+  includeAllTools: true,
 });
 ```
 
-## API Reference
+### CoinGecko Server Options
+
+```javascript
+const coingeckoServer = createCoinGeckoServer({
+  name: 'custom-coingecko-server',
+  version: '1.0.0',
+  includeAllTools: true,
+  includeBasicTools: true,
+  includeAdvancedTools: false,
+});
+```
+
+## Available Tools
 
 ### Twitter Tools
 
-| Tool Name | Description | Parameters |
-|-----------|-------------|------------|
-| `twitter-get-profile` | Get a user's profile information | `username` (required) |
-| `twitter-get-tweets` | Get recent tweets from a user | `username` (required), `count` (optional, default: 10) |
-| `twitter-search-tweets` | Search for tweets | `query` (required), `count` (optional, default: 20) |
-| `twitter-get-trends` | Get trending topics | None |
-| `twitter-send-tweet` | Send a tweet | `text` (required) |
-| `twitter-like-tweet` | Like a tweet | `tweetId` (required) |
-| `twitter-retweet` | Retweet a tweet | `tweetId` (required) |
-| `twitter-follow-user` | Follow a user | `username` (required) |
+- `twitter-get-user`: Get detailed information about a Twitter user
+- `twitter-get-tweet`: Get details about a specific tweet
+- `twitter-search-tweets`: Search for tweets containing specific terms
+- `twitter-get-trends`: Get current Twitter trends
+- `twitter-send-tweet`: Send a tweet (requires authentication)
+- `twitter-get-followers`: Get followers for a user
+- `twitter-get-following`: Get accounts a user is following
+- `twitter-get-dm-conversations`: Get direct messages
+- And more...
 
 ### Substack Tools
 
-| Tool Name | Description | Parameters |
-|-----------|-------------|------------|
-| `substack-get-publication-info` | Get publication information | `substackId` (required) |
-| `substack-get-recent-posts` | Get recent posts | `substackId` (required), `limit` (optional, default: 10) |
-| `substack-search-posts` | Search posts | `substackId` (required), `searchTerm` (required), `limit` (optional, default: 10) |
-| `substack-get-comments` | Get comments for a post | `substackId` (required), `postId` (required) |
+- `getRecentPosts`: Get recent posts from a Substack publication
+- `getPostBySlug`: Get a specific post by its slug
+- `getPostContentByUrl`: Get the full content of a post by URL
+- `getComments`: Get comments for a specific post
+- `getPublicationInfo`: Get information about a Substack publication
+- `searchPosts`: Search for posts in a publication
+- And more...
 
 ### CoinGecko Tools
 
-| Tool Name | Description | Parameters |
-|-----------|-------------|------------|
-| `coingecko-get-features` | Get available CoinGecko API features | None |
-| `coingecko-get-price` | Get the current price of a token | `tokenId` (required), `currency` (optional, default: "usd") |
-| `coingecko-get-contracts` | Get contract addresses and chains for a token | `tokenId` (required) |
-| `coingecko-search` | Search for tokens by query | `query` (required), `limit` (optional, default: 10) |
-| `coingecko-trending` | Get trending tokens | `limit` (optional, default: 10) |
+- `coingecko-get-price`: Get current price of a cryptocurrency
+- `coingecko-search`: Search for cryptocurrencies by name
+- `coingecko-get-contracts`: Get contract addresses for tokens
+- `coingecko-trending`: Get currently trending tokens
+- `coingecko-get-features`: Get available API features
+- And more...
+
+## Command Line Usage
+
+You can start the servers directly from the command line:
+
+```bash
+# Start individual modules
+npm run start:twitter
+npm run start:substack
+npm run start:coingecko
+
+# Debug servers
+npm run debug:twitter
+```
 
 ## Development
 
-### Project Structure
-
-```
-recall-data-omnifeeds/
-├── src/
-│   ├── index.ts              # Main server entry point
-│   ├── twitter-client.ts     # Twitter API client
-│   ├── substack-client.ts    # Substack API client
-│   ├── coingecko-client.ts   # CoinGecko API client
-│   └── tools/               # MCP tool implementations
-├── dist/                    # Compiled JavaScript files
-├── package.json            # Project configuration
-└── tsconfig.json          # TypeScript configuration
-```
-
-### Building
-
 ```bash
+# Install dependencies
+npm install
+
+# Build all modules
 npm run build
+
+# Build specific modules
+npm run build:twitter
+npm run build:substack
+npm run build:coingecko
+
+# Run tests
+npm test
+npm run test:twitter
+npm run test:substack
+npm run test:coingecko
+
+# Linting and formatting
+npm run lint
+npm run format
 ```
 
-### Running Tests
+## Environment Variables
 
-```bash
-npm test
+Create a `.env` file with the following variables:
+
+```
+# Twitter API credentials
+TWITTER_API_KEY=your_twitter_api_key
+TWITTER_API_SECRET=your_twitter_api_secret
+TWITTER_ACCESS_TOKEN=your_twitter_access_token
+TWITTER_ACCESS_SECRET=your_twitter_access_secret
+
+# CoinGecko API key (optional)
+COINGECKO_API_KEY=your_coingecko_api_key
 ```
 
 ## License
 
 ISC
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
