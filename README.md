@@ -20,31 +20,16 @@ npm install @recallnet/external-mcp
 
 ## Usage
 
-### Quick Start
-
-```javascript
-import { createCombinedServer } from "@recallnet/external-mcp";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-
-// Create a server with all modules
-const server = createCombinedServer();
-const transport = new StdioServerTransport();
-
-// Connect and start listening
-server.connect(transport).then(() => {
-  console.log("MCP server started and listening");
-});
-```
-
-### Individual Modules
+## Individual Modules
 
 Each module can be used independently:
 
 ```javascript
-import { createTwitterServer } from "@recallnet/external-mcp/twitter";
-import { createSubstackServer } from "@recallnet/external-mcp/substack";
-import { createCoinGeckoServer } from "@recallnet/external-mcp/coingecko";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+
+import { createCoinGeckoServer } from '@recallnet/external-mcp/coingecko';
+import { createSubstackServer } from '@recallnet/external-mcp/substack';
+import { createTwitterServer } from '@recallnet/external-mcp/twitter';
 
 // Create individual servers
 const twitterServer = createTwitterServer();
@@ -54,7 +39,7 @@ const coingeckoServer = createCoinGeckoServer();
 // Connect and start listening
 const transport = new StdioServerTransport();
 twitterServer.server.connect(transport).then(() => {
-  console.log("Twitter MCP server started");
+  console.log('Twitter MCP server started');
 });
 ```
 
@@ -66,8 +51,8 @@ Each module accepts configuration options:
 
 ```javascript
 const twitterServer = createTwitterServer({
-  name: "custom-twitter-server",
-  version: "1.0.0",
+  name: 'custom-twitter-server',
+  version: '1.0.0',
   includeAllTools: true,
   includeReadTools: true,
   includeWriteTools: false,
@@ -79,8 +64,8 @@ const twitterServer = createTwitterServer({
 
 ```javascript
 const substackServer = createSubstackServer({
-  name: "custom-substack-server",
-  version: "1.0.0",
+  name: 'custom-substack-server',
+  version: '1.0.0',
   includeAllTools: true,
 });
 ```
@@ -89,28 +74,11 @@ const substackServer = createSubstackServer({
 
 ```javascript
 const coingeckoServer = createCoinGeckoServer({
-  name: "custom-coingecko-server",
-  version: "1.0.0",
+  name: 'custom-coingecko-server',
+  version: '1.0.0',
   includeAllTools: true,
   includeBasicTools: true,
   includeAdvancedTools: false,
-});
-```
-
-### Combined Server Options
-
-```javascript
-const combinedServer = createCombinedServer({
-  name: "custom-combined-server",
-  version: "1.0.0",
-  modules: ["twitter", "substack"], // Include only twitter and substack
-  twitterOptions: {
-    includeReadTools: true,
-    includeWriteTools: false,
-  },
-  substackOptions: {
-    includeAllTools: true,
-  },
 });
 ```
 
@@ -152,9 +120,6 @@ const combinedServer = createCombinedServer({
 You can start the servers directly from the command line:
 
 ```bash
-# Start all modules in a combined server
-npm run start
-
 # Start individual modules
 npm run start:twitter
 npm run start:substack

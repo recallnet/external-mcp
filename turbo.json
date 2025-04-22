@@ -1,0 +1,51 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
+  "globalEnv": [
+    "NEXT_PUBLIC_TS_SITE_KEY",
+    "NEXT_PUBLIC_CHAIN_NAME",
+    "NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID",
+    "PRIVATE_FONTS",
+    "FONTS_REPO_ACCESS_TOKEN"
+  ],
+  "tasks": {
+    "@recallnet/mcp-types#build": {
+      "outputs": ["dist/**"]
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "check-types": {
+      "dependsOn": ["^check-types"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "clean": {
+      "dependsOn": ["^clean"],
+      "cache": false
+    },
+    "docs:build": {
+      "dependsOn": ["^docs:build"],
+      "outputs": ["docs/**"],
+      "inputs": ["src/**/*.ts", "typedoc.json"],
+      "cache": true
+    },
+    "docs:check": {
+      "dependsOn": ["^docs:check"],
+      "inputs": ["src/**/*.ts", "typedoc.json"],
+      "cache": true
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "inputs": ["src/**/*.ts", "src/**/*.tsx", "test/**/*.ts", "test/**/*.tsx", "**/__tests__/**/*.ts", "**/__tests__/**/*.tsx"],
+      "outputs": []
+    }
+  }
+}

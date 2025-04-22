@@ -11,19 +11,20 @@ npm install @recallnet/external-mcp
 ## Usage
 
 ```javascript
-import { createSubstackServer } from "@recallnet/external-mcp/substack";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+
+import { createSubstackServer } from '@recallnet/external-mcp/substack';
 
 // Create the server
 const substackServer = createSubstackServer({
-  name: "my-substack-server",
-  version: "1.0.0",
+  name: 'my-substack-server',
+  version: '1.0.0',
 });
 
 // Connect with stdio transport
 const transport = new StdioServerTransport();
 substackServer.server.connect(transport).then(() => {
-  console.log("Substack MCP server started");
+  console.log('Substack MCP server started');
 });
 ```
 
@@ -40,8 +41,8 @@ Gets basic information about a Substack publication.
 **Example:**
 
 ```javascript
-const result = await client.invoke("getPublicationInfo", {
-  substackId: "example.substack.com",
+const result = await client.invoke('getPublicationInfo', {
+  substackId: 'example.substack.com',
 });
 ```
 
@@ -56,8 +57,8 @@ Gets metadata for a Substack post by URL without the content.
 **Example:**
 
 ```javascript
-const result = await client.invoke("getPostMetadata", {
-  postUrl: "https://example.substack.com/p/post-slug",
+const result = await client.invoke('getPostMetadata', {
+  postUrl: 'https://example.substack.com/p/post-slug',
 });
 ```
 
@@ -73,9 +74,9 @@ Gets metadata for a Substack post by its slug without the content.
 **Example:**
 
 ```javascript
-const result = await client.invoke("getMetadataBySlug", {
-  substackId: "example.substack.com",
-  slug: "post-slug",
+const result = await client.invoke('getMetadataBySlug', {
+  substackId: 'example.substack.com',
+  slug: 'post-slug',
 });
 ```
 
@@ -92,10 +93,10 @@ Gets post content in plain text or markdown format by slug.
 **Example:**
 
 ```javascript
-const result = await client.invoke("getContentBySlug", {
-  substackId: "example.substack.com",
-  slug: "post-slug",
-  format: "markdown",
+const result = await client.invoke('getContentBySlug', {
+  substackId: 'example.substack.com',
+  slug: 'post-slug',
+  format: 'markdown',
 });
 ```
 
@@ -111,9 +112,9 @@ Gets the latest post's content in plain text or markdown format.
 **Example:**
 
 ```javascript
-const result = await client.invoke("getContentLatest", {
-  substackId: "example.substack.com",
-  format: "markdown",
+const result = await client.invoke('getContentLatest', {
+  substackId: 'example.substack.com',
+  format: 'markdown',
 });
 ```
 
@@ -129,8 +130,8 @@ Gets comments for a Substack post.
 **Example:**
 
 ```javascript
-const result = await client.invoke("getPostComments", {
-  substackId: "example.substack.com",
+const result = await client.invoke('getPostComments', {
+  substackId: 'example.substack.com',
   postId: 12345,
 });
 ```
@@ -153,8 +154,8 @@ Gets recent posts from a Substack publication.
 **Example:**
 
 ```javascript
-const result = await client.invoke("getRecentPosts", {
-  substackId: "example.substack.com",
+const result = await client.invoke('getRecentPosts', {
+  substackId: 'example.substack.com',
   page: 1,
 });
 ```
@@ -178,9 +179,9 @@ Searches for posts in a Substack publication containing a specific term.
 **Example:**
 
 ```javascript
-const result = await client.invoke("searchPosts", {
-  substackId: "example.substack.com",
-  searchTerm: "climate",
+const result = await client.invoke('searchPosts', {
+  substackId: 'example.substack.com',
+  searchTerm: 'climate',
   page: 1,
 });
 ```
@@ -197,9 +198,9 @@ Gets a specific post by its slug.
 **Example:**
 
 ```javascript
-const result = await client.invoke("getPostBySlug", {
-  substackId: "example.substack.com",
-  slug: "post-slug",
+const result = await client.invoke('getPostBySlug', {
+  substackId: 'example.substack.com',
+  slug: 'post-slug',
 });
 ```
 
@@ -219,21 +220,21 @@ The following tools are deprecated and will be removed in a future version:
 
 ```javascript
 // Old approach
-const result = await client.invoke("getPostContentByUrl", {
-  postUrl: "https://example.substack.com/p/post-slug",
+const result = await client.invoke('getPostContentByUrl', {
+  postUrl: 'https://example.substack.com/p/post-slug',
 });
 
 // New approach for content
-const substackId = "example.substack.com";
-const slug = "post-slug";
-const contentResult = await client.invoke("getContentBySlug", {
+const substackId = 'example.substack.com';
+const slug = 'post-slug';
+const contentResult = await client.invoke('getContentBySlug', {
   substackId,
   slug,
-  format: "plain", // or "markdown"
+  format: 'plain', // or "markdown"
 });
 
 // New approach for metadata
-const metadataResult = await client.invoke("getMetadataBySlug", {
+const metadataResult = await client.invoke('getMetadataBySlug', {
   substackId,
   slug,
 });
@@ -243,19 +244,19 @@ const metadataResult = await client.invoke("getMetadataBySlug", {
 
 ```javascript
 // Old approach
-const result = await client.invoke("getRecentPosts", {
-  substackId: "example.substack.com",
+const result = await client.invoke('getRecentPosts', {
+  substackId: 'example.substack.com',
   limit: 20, // get 20 posts
 });
 
 // New approach
-const page1Result = await client.invoke("getRecentPosts", {
-  substackId: "example.substack.com",
+const page1Result = await client.invoke('getRecentPosts', {
+  substackId: 'example.substack.com',
   page: 1, // get first 10 posts
 });
 
-const page2Result = await client.invoke("getRecentPosts", {
-  substackId: "example.substack.com",
+const page2Result = await client.invoke('getRecentPosts', {
+  substackId: 'example.substack.com',
   page: 2, // get next 10 posts
 });
 ```
@@ -266,6 +267,6 @@ All tools return formatted error objects when something goes wrong:
 
 ```javascript
 {
-  error: "Error message (code: 404)" // If applicable
+  error: 'Error message (code: 404)'; // If applicable
 }
 ```
